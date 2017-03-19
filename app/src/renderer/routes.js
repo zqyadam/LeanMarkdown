@@ -1,0 +1,25 @@
+export default [{
+  path: '/',
+  name: 'login',
+  component: require('components/Login'),
+  meta: {
+    requiresAuth: false
+  }
+}, {
+  path: '/registe',
+  name: 'registe',
+  component: require('components/Registe'),
+  meta: {
+    requiresAuth: false
+  }
+}, {
+  path: '/editor',
+  name: 'editor',
+  component: require('components/Editor'),
+  meta: {
+    requiresAuth: true
+  }
+}, {
+  path: '*',
+  redirect: '/',
+}]

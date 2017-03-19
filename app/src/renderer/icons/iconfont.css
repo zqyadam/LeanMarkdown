@@ -1,0 +1,69 @@
+/* [class^="el-icon-z"], [class*=" el-icon-z"] */
+
+@font-face {font-family: "iconfont";
+  src: url('//at.alicdn.com/t/font_xj5lchmsqpaurf6r.eot?t=1489764644410'); /* IE9*/
+  src: url('//at.alicdn.com/t/font_xj5lchmsqpaurf6r.eot?t=1489764644410#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('//at.alicdn.com/t/font_xj5lchmsqpaurf6r.woff?t=1489764644410') format('woff'), /* chrome, firefox */
+  url('//at.alicdn.com/t/font_xj5lchmsqpaurf6r.ttf?t=1489764644410') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
+  url('//at.alicdn.com/t/font_xj5lchmsqpaurf6r.svg?t=1489764644410#iconfont') format('svg'); /* iOS 4.1- */
+}
+
+[class^="el-icon-z"], [class*=" el-icon-z"] {
+  font-family:"iconfont" !important;
+  font-size:16px;
+  font-style:normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.el-icon-z-yinyong:before { content: "\e620"; }
+
+.el-icon-z-bold:before { content: "\e601"; }
+
+.el-icon-z-daima:before { content: "\e623"; }
+
+.el-icon-z-shanchuxian:before { content: "\e743"; }
+
+.el-icon-z-email:before { content: "\e60b"; }
+
+.el-icon-z-icon:before { content: "\e60c"; }
+
+.el-icon-z-iconfontcolor16:before { content: "\e67d"; }
+
+.el-icon-z-tupian:before { content: "\e6ee"; }
+
+.el-icon-z-hengxian:before { content: "\e604"; }
+
+.el-icon-z-module-link:before { content: "\e626"; }
+
+.el-icon-z-quote:before { content: "\e6d3"; }
+
+.el-icon-z-password:before { content: "\e697"; }
+
+.el-icon-z-ai-code:before { content: "\e606"; }
+
+.el-icon-z-wuxuliebiao1:before { content: "\e677"; }
+
+.el-icon-z-daimakuai:before { content: "\e69f"; }
+
+.el-icon-z-redo:before { content: "\e716"; }
+
+.el-icon-z-undo:before { content: "\e733"; }
+
+.el-icon-z-youxuliebiao:before { content: "\e635"; }
+
+.el-icon-z-h:before { content: "\e603"; }
+
+.el-icon-z-h1:before { content: "\e605"; }
+
+.el-icon-z-h2:before { content: "\e607"; }
+
+.el-icon-z-h3:before { content: "\e608"; }
+
+.el-icon-z-h4:before { content: "\e609"; }
+
+.el-icon-z-h5:before { content: "\e60a"; }
+
+.el-icon-z-shanchuxian1:before { content: "\e702"; }
+
+.el-icon-z-italic:before { content: "\e6bf"; }
