@@ -38,7 +38,6 @@ import {
 import {
   emailCheck
 } from '../js/common.js'
-
 export default {
   data() {
       return {
@@ -101,7 +100,9 @@ export default {
     },
     created: function() {
       if (isLoggedIn()) {
-      	this.$router.push({name:'editor'})
+        this.$router.push({
+          name: 'editor'
+        })
       }
     }
 }

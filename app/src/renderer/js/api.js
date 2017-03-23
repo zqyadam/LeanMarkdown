@@ -1,3 +1,5 @@
+// import AV from 'leancloud-storage'
+import { AV } from './av-min.js'
 
 var APP_ID = 'KYkddmR5GLXnD15sR7loC42p-gzGzoHsz';
 var APP_KEY = 'FEBSUHwgfS2QHQKfHT1dikH7';
@@ -13,6 +15,11 @@ export let requestLogin = function(username, password) {
   return AV.User.logIn(username, password);
 }
 
+export let requestLogout = function() {
+	AV.User.logOut();
+}
+
 export let isLoggedIn = function() {
 	return AV.User.current()?true:false;
 }
+

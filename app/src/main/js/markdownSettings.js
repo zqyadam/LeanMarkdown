@@ -9,9 +9,9 @@ hljs.configure({
 
 var renderer = new marked.Renderer();
 
-renderer.code = function(code, language) {
+renderer.code = function(code, language='javascript') {
   let time1 = new Date().getTime();
-  let codeContent = hljs.highlightAuto(code).value;
+  let codeContent = hljs.highlightAuto(code, [language]).value;
   let lines = codeContent.split('\n').length;
   let nums = [];
   for (var i = 0; i < lines; i++) {
@@ -33,12 +33,7 @@ marked.setOptions({
   pedantic: false,
   sanitize: false,
   smartLists: true,
-  smartypants: false,
-  // highlight: function(code) {
-  //   // console.log(code);
-  //   return hljs.highlightAuto(code).value;
-  // }
-
+  
 });
 
 export default marked

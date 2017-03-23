@@ -4,12 +4,27 @@
   </div>
 </template>
 <script>
+import { ipcRenderer } from 'electron'
 
 export default {
-	computed:{
-		HTMLContent:function() {
-			return this.$store.getters.convertedContent
+	data(){
+		return {
+			HTMLContent:''
 		}
+
+	},
+	/*computed:{
+		HTMLContent:function() {
+			console.log(this.$store.HTMLContent);
+			return this.$store.state.editor.HTMLContent
+		}
+	},*/
+	mounted:function() {
+		let _this = this
+		ipcRenderer.on('renderMarkdownSuccess',function(event, arg) {
+			// console.log(arg);
+			_this.HTMLContent = arg;
+		})
 	}
 }
 </script>
