@@ -1,8 +1,14 @@
 // import AV from 'leancloud-storage'
 import { AV } from './av-min.js'
+import {APP_ID, APP_KEY} from './AVConfig.js'
+// in AVConfig.js
+/*
+export let APP_ID = 'your_app_id';
+export let APP_KEY = 'your_app_key';
 
-var APP_ID = 'KYkddmR5GLXnD15sR7loC42p-gzGzoHsz';
-var APP_KEY = 'FEBSUHwgfS2QHQKfHT1dikH7';
+*/
+
+
 AV.init({
   appId: APP_ID,
   appKey: APP_KEY

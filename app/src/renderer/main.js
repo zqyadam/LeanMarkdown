@@ -5,7 +5,7 @@ import Router from 'vue-router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
 
-// import 'highlight.js/styles/monokai-sublime.css'
+
 // import './css/highlight_linenumber.css'
 
 import App from './App'

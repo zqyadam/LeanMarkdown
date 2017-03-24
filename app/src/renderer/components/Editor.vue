@@ -1,12 +1,15 @@
 <template>
   <div class="main">
     <el-button-group id="toolbar">
-      <el-tooltip v-for="tool in tools" effect="dark" :content="tool.tip" placement="bottom">
-        <el-button :plain="true" :icon="tool.icon" size="small" @click="tool.callback"></el-button>
+      <!--  <el-tooltip v-for="tool in tools" effect="dark" :content="tool.tip" placement="bottom">
+        <el-button :plain="true" :icon="tool.icon" size="small" @click="execuateCallback(tool.name)"></el-button>
+      </el-tooltip> -->
+      <el-tooltip v-for="tool in toolbarIcons" effect="dark" :content="toolbarIconTips[tool]?toolbarIconTips[tool]:tool" placement="bottom">
+        <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)"></el-button>
       </el-tooltip>
     </el-button-group>
     <div class="half">
-      <section class="half-item" sty>
+      <section class="half-item">
         <div class="fit">
           <textarea id="editor"></textarea>
         </div>
@@ -21,10 +24,15 @@
   </div>
 </template>
 <script>
+/* fake data */
+import fakeData from '../fake/data.js'
+ // fake data end 
+
 import {
   requestLogout
 } from '../js/api.js'
 import 'github-markdown-css/github-markdown.css'
+import 'highlight.js/styles/monokai-sublime.css'
 
 import Toolbar from './Editor/Toolbar'
 
@@ -50,6 +58,7 @@ hljs.configure({
 })
 
 var renderer = new marked.Renderer();
+// code renderer
 renderer.code = function(code, language = 'javascript') {
 
   let time1 = new Date().getTime(); // start time
@@ -80,9 +89,9 @@ marked.setOptions({
   sanitize: false,
   smartLists: true,
   smartypants: false,
-  // highlight: function(code, language) {
-  //   return hljs.highlightAuto(code, [language]).value;
-  // }
+  highlight: function(code, language) {
+    return hljs.highlightAuto(code, [language]).value;
+  }
 });
 
 
@@ -94,115 +103,190 @@ export default {
     return {
       MdContent: '',
       cm: null,
-      tools: [{
-        name: 'undo',
-        icon: 'z-undo',
-        tip: '撤销',
-        callback: this.undo
-      }, {
-        name: 'redo',
-        icon: 'z-redo',
-        tip: '重做',
-        callback: this.redo
-      }, { //
-        name: 'fontLarge',
-        icon: 'z-fangda',
-        tip: '放大字体',
-        callback: function() {}
-      }, { //
-        name: 'fontSmall',
-        icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
-        tip: '缩小字体',
-        callback: function() {}
-      }, {
-        name: 'bold',
-        icon: 'z-bold',
-        tip: '加粗',
-        callback: this.bold
-      }, {
-        name: 'italic',
-        icon: 'z-italic',
-        tip: '斜体',
-        callback: this.italic
-      }, {
-        name: 'quote',
-        icon: 'z-yinyong',
-        tip: '引用',
-        callback: this.quote
-      }, {
-        name: 'h1',
-        icon: 'z-h',
-        tip: '标题1',
-        callback: this.h1
-      }, {
-        name: 'h2',
-        icon: 'z-h1',
-        tip: '标题2',
-        callback: function() {}
-      }, {
-        name: 'h3',
-        icon: 'z-h3',
-        tip: '标题3',
-        callback: function() {}
-      }, {
-        name: 'h4',
-        icon: 'z-h2',
-        tip: '标题4',
-        callback: function() {}
-      }, {
-        name: 'h5',
-        icon: 'z-h5',
-        tip: '标题5',
-        callback: function() {}
-      }, {
-        name: 'h6',
-        icon: 'z-h4',
-        tip: '标题6',
-        callback: function() {}
-      }, {
-        name: 'ul',
-        icon: 'z-wuxuliebiao1',
-        tip: '无序列表',
-        callback: function() {}
-      }, {
-        name: 'ol',
-        icon: 'z-youxuliebiao',
-        tip: '有序列表',
-        callback: function() {}
-      }, {
-        name: 'hr',
-        icon: 'z-hengxian',
-        tip: '横线',
-        callback: function() {}
-      }, {
-        name: 'link',
-        icon: 'z-module-link',
-        tip: '链接',
-        callback: function() {}
-      }, {
-        name: 'image',
-        icon: 'z-tupian',
-        tip: '图片',
-        callback: function() {}
-      }, {
-        name: 'inlineCode',
-        icon: 'z-ai-code',
-        tip: '行内代码',
-        callback: function() {}
-      }, {
-        name: 'blockCode',
-        icon: 'z-daimakuai',
-        tip: '代码块',
-        callback: function() {}
-      }, {
-        name: 'logout',
-        icon: 'z-logout',
-        tip: '退出',
-        callback: function() {
-          requestLogout()
-          console.log(this);
+      rendering: false,
+      toolbarIcons: ['undo', 'redo', 'bold', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+      toolbarIconsClass: {
+        'undo': 'z-undo',
+        'redo': 'z-redo',
+        'bold': 'z-bold',
+        'italic': 'z-italic',
+        'quote': 'z-yinyong',
+        'h1': 'z-h',
+        'h2': 'z-h1',
+        'h3': 'z-h3',
+        'h4': 'z-h2',
+        'h5': 'z-h5',
+        'h6': 'z-h4',
+      },
+      toolbarIconTips: {
+        'undo': '撤销(Ctrl+Z)',
+        'redo': '重做',
+        'bold': '加粗',
+        'italic': '斜体',
+        'quote': '引用',
+        'h1': '标题1',
+        'h2': '标题2',
+        'h3': '标题3',
+        'h4': '标题4',
+        'h5': '标题5',
+        'h6': '标题6',
+      },
+      toolbarHandlers: {
+        undo: function(cm) {
+          console.log('undo');
+          cm.undo();
+        },
+        redo: function(cm) {
+          console.log('redo:');
+          cm.redo()
+        },
+        bold: function(cm) {
+          Common.setWrapLabel(cm, '**')
+        },
+        italic: function(cm) {
+          Common.setWrapLabel(cm, '*')
+        },
+        quote: function(cm) {
+          Common.setStartLabel(cm, '>')
+        },
+        h1: function(cm) {
+          Common.setStartLabel(cm, '#')
+        },
+        h2: function(cm) {
+          Common.setStartLabel(cm, '##')
+        },
+        h3: function(cm) {
+          Common.setStartLabel(cm, '###')
+        },
+        h4: function(cm) {
+          Common.setStartLabel(cm, '####')
+        },
+        h5: function(cm) {
+          Common.setStartLabel(cm, '#####')
+        },
+        h6: function(cm) {
+          Common.setStartLabel(cm, '######')
         }
-      }]
+      },
+      tools: [
+        // {
+        //   name: 'undo',
+        //   icon: 'z-undo',
+        //   tip: '撤销',
+        //   callback: this.undo
+        // }, {
+        //   name: 'redo',
+        //   icon: 'z-redo',
+        //   tip: '重做',
+        //   callback: this.redo
+        // },
+        { //
+          name: 'fontLarge',
+          icon: 'z-fangda',
+          tip: '放大字体',
+          callback: function() {}
+        }, { //
+          name: 'fontSmall',
+          icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
+          tip: '缩小字体',
+          callback: function() {}
+        },
+        /*{
+          name: 'bold',
+          icon: 'z-bold',
+          tip: '加粗',
+          callback: this.bold
+        }, {
+          name: 'italic',
+          icon: 'z-italic',
+          tip: '斜体',
+          callback: this.italic
+        }, {
+          name: 'quote',
+          icon: 'z-yinyong',
+          tip: '引用',
+          callback: this.quote
+        }, 
+        {
+          name: 'h1',
+          icon: 'z-h',
+          tip: '标题1',
+          callback: this.h1
+        }, 
+        {
+          name: 'h2',
+          icon: 'z-h1',
+          tip: '标题2',
+          callback: function() {}
+        },
+        {
+          name: 'h3',
+          icon: 'z-h3',
+          tip: '标题3',
+          callback: function() {}
+        }, {
+          name: 'h4',
+          icon: 'z-h2',
+          tip: '标题4',
+          callback: function() {}
+        }, {
+          name: 'h5',
+          icon: 'z-h5',
+          tip: '标题5',
+          callback: function() {}
+        }, {
+          name: 'h6',
+          icon: 'z-h4',
+          tip: '标题6',
+          callback: function(cm) {
+            console.log(cm);
+          }
+        },  */
+        {
+          name: 'ul',
+          icon: 'z-wuxuliebiao1',
+          tip: '无序列表',
+          callback: function() {}
+        }, {
+          name: 'ol',
+          icon: 'z-youxuliebiao',
+          tip: '有序列表',
+          callback: function() {}
+        }, {
+          name: 'hr',
+          icon: 'z-hengxian',
+          tip: '横线',
+          callback: function() {}
+        }, {
+          name: 'link',
+          icon: 'z-module-link',
+          tip: '链接',
+          callback: function() {}
+        }, {
+          name: 'image',
+          icon: 'z-tupian',
+          tip: '图片',
+          callback: function() {}
+        }, {
+          name: 'inlineCode',
+          icon: 'z-ai-code',
+          tip: '行内代码',
+          callback: function() {}
+        }, {
+          name: 'blockCode',
+          icon: 'z-daimakuai',
+          tip: '代码块',
+          callback: function() {}
+        }, {
+          name: 'logout',
+          icon: 'z-logout',
+          tip: '退出',
+          callback: function() {
+            requestLogout()
+            console.log(this);
+          }
+        }
+      ]
     }
   },
   computed: {
@@ -218,108 +302,9 @@ export default {
     },
   },
   methods: {
-    setMdContent: function(cm, changeObj) {
-      // let time1 = new Date().getTime();
-      this.MdContent = cm.getValue();
-      // let time2 = new Date().getTime();
-      // console.log('getValue time :' + (time2 - time1));
-    },
-    undo: function() {
-      console.log('undo');
-      this.cm.undo();
-    },
-    redo: function() {
-      this.cm.redo()
-    },
-    bold: function() {
-      let aroundLabel = '**'
-      let pos = this.cm.getCursor('from');
-      if (this.cm.somethingSelected()) { // 存在选中文本
-        let selection = this.cm.getSelection();
-        let replaceContent = aroundLabel + selection + aroundLabel
-        this.cm.replaceSelection(replaceContent)
-      } else { // 没有选中文本
-        this.cm.replaceSelection(aroundLabel + aroundLabel, 'start')
-        this.cm.setCursor(pos.line, pos.ch + aroundLabel.length)
-      }
-    },
-    italic: function() {
-      let aroundLabel = '*'
-      let pos = this.cm.getCursor('from');
-      if (this.cm.somethingSelected()) {
-        let selection = this.cm.getSelection();
-        let replaceContent = aroundLabel + selection + aroundLabel
-        this.cm.replaceSelection(replaceContent)
-      } else {
-        this.cm.replaceSelection(aroundLabel + aroundLabel, 'start')
-        this.cm.setCursor(pos.line, pos.ch + aroundLabel.length)
-      }
-    },
-    quote: function() {
-      let cm = this.cm;
-      let pos = cm.getCursor('from');
-      let currentLineContent = cm.getLine(pos.line);
-      if (currentLineContent.trim().length === 0) { // 当前行没有内容
-        cm.replaceRange('\n> \n', {
-          line: pos.line,
-          ch: 0
-        }, {
-          line: pos.line,
-          ch: currentLineContent.length
-        })
-        cm.setCursor({
-          line: pos.line + 1,
-          ch: 2
-        })
-      } else {
-        cm.replaceRange('\n\n> \n', {
-          line: pos.line,
-          ch: currentLineContent.length
-        })
-        cm.setCursor({
-          line: pos.line + 2,
-          ch: 2
-        })
-      }
-    },
-    h1: function() {
-      let titleLabel = '#'
-      let cm = this.cm;
-      let pos = cm.getCursor();
-      let currentLineContent = cm.getLine(pos.line);
-      if (currentLineContent[0] === '#') {
-        cm.replaceRange(titleLabel, {
-          line: pos.line,
-          ch: 0
-        })
-      } else {
-        cm.replaceRange(titleLabel+' ' + currentLineContent.trim(), {
-          line: pos.line,
-          ch: 0
-        }, {
-          line: pos.line,
-          ch: currentLineContent.length
-        })
-      }
-    },
-    h2:function() {
-      let titleLabel = '##'
-      let cm = this.cm;
-      let pos = cm.getCursor();
-      let currentLineContent = cm.getLine(pos.line);
-      if (currentLineContent[0] === '#') {
-        cm.replaceRange(titleLabel, {
-          line: pos.line,
-          ch: 0
-        })
-      } else {
-        cm.replaceRange(titleLabel+' ' + currentLineContent.trim(), {
-          line: pos.line,
-          ch: 0
-        }, {
-          line: pos.line,
-          ch: currentLineContent.length
-        })
+    execuateCallback: function(name) {
+      if (this.toolbarHandlers[name]) {
+        this.toolbarHandlers[name](this.cm)
       }
     },
     unh1: function() {
@@ -357,34 +342,62 @@ export default {
     });
 
     // console.log(this.editor);
+    this.cm.on('change', (cm, changeObj) => {
+      if (!_this.rendering) {
+        setTimeout(function() {
+          _this.MdContent = cm.getValue();
+          _this.rendering = false
+        }, 300)
+        _this.rendering = true;
+      }
 
-    this.cm.on('change', _.debounce(_this.setMdContent, 500, {
-      'leading': true,
-      'trailing': true
-    }))
-    console.log(this.$methods);
+    })
 
     this.cm.setOption('extraKeys', {
       'Ctrl-B': this.bold,
       'Ctrl-I': this.italic,
-      'Ctrl-Q': this.quote,
+      'Ctrl-Q': () => {
+        this.execuateCallback('quote')
+      },
       'Ctrl-1': this.h1,
       'Ctrl-2': this.h2,
       'Shift-Ctrl-1': this.unh1
     })
 
 
-    let defaultContent = `# Todo
-- [x] 增加快捷键（新建、打开、保存）
-- [x] 增加“保存成功”提示(采用Nprogress进度条实现)
-- [ ] 增加图片上传功能（与七牛云相结合）
-- [ ] 增加剪切板图片读取及上传功能
-- [x] fix:全局快捷键冲突问题（利用Editor.md快捷键实现）
-
-    `;
+    let defaultContent = fakeData
     this.cm.setValue(defaultContent)
   }
 }
+
+let Common = (function() {
+  /* 设置包围标签 */
+  function setWrapLabel(cm, wrapLabel) {
+    let pos = cm.getCursor('from');
+    if (cm.somethingSelected()) { // 存在选中文本
+      let selection = cm.getSelection();
+      let replaceContent = wrapLabel + selection + wrapLabel
+      cm.replaceSelection(replaceContent)
+    } else { // 没有选中文本
+      cm.replaceSelection(wrapLabel + wrapLabel, 'start')
+      cm.setCursor(pos.line, pos.ch + wrapLabel.length)
+    }
+  }
+  /* 设置标题 */
+  function setStartLabel(cm, startLabel) {
+    let pos = cm.getCursor('from');
+    cm.replaceRange(startLabel + ' ', {
+      line: pos.line,
+      ch: 0
+    })
+  }
+
+  // 返回模块
+  return {
+    setWrapLabel: setWrapLabel,
+    setStartLabel: setStartLabel
+  }
+})()
 </script>
 <style scoped>
 .main {
@@ -432,13 +445,12 @@ export default {
 .paper {
   transition: all .45s cubic-bezier(0.23, 1, 0.32, 1);
   color: rgba(0, 0, 0, 0.87);
-  background-color: #fff;
+  background-color: #fcfcfc;
   box-shadow: rgba(0, 0, 0, 0.117647) 0px 1px 6px, rgba(0, 0, 0, 0.117647) 0px 1px 4px;
   border-radius: 2px;
   height: 100%;
   padding: 20px;
   margin: 0 5px;
-  overflow-y: scroll;
   word-break: break-all;
 }
 
@@ -446,8 +458,7 @@ export default {
   height: 100%;
   width: 100%;
   margin: 0px;
-  /*overflow: hidden;*/
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 
@@ -455,8 +466,6 @@ export default {
 
 .markdown-body {
   box-sizing: border-box;
-  /*min-width: 200px;*/
-  /*max-width: 980px;*/
   margin: 0 auto;
   padding: 45px;
 }
