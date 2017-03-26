@@ -29,3 +29,8 @@ export let isLoggedIn = function() {
 	return AV.User.current()?true:false;
 }
 
+export let requestImageUploadFromLocal = function(fileObj) {
+	console.log('uploading image');
+	var file = new AV.File(fileObj.name, fileObj);
+	return file;
+}

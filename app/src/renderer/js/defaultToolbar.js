@@ -1,4 +1,6 @@
-export const toolbarIcons = ['undo', 'redo', 'bold', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link'];
+import { requestImageUploadFromLocal } from './api.js'
+
+export const toolbarIcons = ['undo', 'redo', 'bold', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image'];
 
 export const toolbarIconsClass = {
   'undo': 'z-undo',
@@ -15,7 +17,8 @@ export const toolbarIconsClass = {
   'ul': 'z-wuxuliebiao1',
   'ol': 'z-youxuliebiao',
   'hr': 'z-hengxian',
-  'link': 'z-module-link'
+  'link': 'z-module-link',
+  'image': 'z-tupian'
 }
 
 export const toolbarIconTips = {
@@ -34,6 +37,7 @@ export const toolbarIconTips = {
   'ol': '有序列表',
   'hr': '横线',
   'link': '链接',
+  'image': '图片'
 }
 export const toolbarHandlers = {
   undo: function(cm) {
@@ -79,47 +83,97 @@ export const toolbarHandlers = {
     Common.insertLabel(cm, '\n\n------\n\n')
   },
   link: function(cm, _this) {
-    // <div class="el-dialog el-dialog--small" style="border:1px solid red;">
-    let HTMLContent = `
-`
-
-/*<div class="el-dialog__wrapper">
-  <div class="el-dialog el-dialog--small" style="top: 15%;">
-    <div class="el-dialog__header"><span class="el-dialog__title">a dialog</span>
-    </div>
-    <div class="el-dialog__body">
-      <div>
-        链接地址:
-        <input type="text" value="http://" id="link"/>
-      </div>
-      <div>
-        链接文本:
-        <input type="text" value="" />
-      </div>
-      <button id="btnClose">close</button>
-    </div>
-  </div>
-</div>*/
-   let closeFun =  cm.openDialog(HTMLContent, function() {
-
-    }, {
-      closeOnBlur: false
-    })
-   document.getElementById('btnClose').onclick = function() {
-   	Common.insertLabel(cm, '[]()');
-    let pos = cm.getCursor('from');
-    cm.setCursor({
-      line: pos.line,
-      ch: pos.ch - 1
-    })
-   	closeFun()
-   }
-
-    return
-    
+    let defaultText = ''
+    if (cm.somethingSelected()) {
+      defaultText = cm.getSelection();
+      // cm.replaceSelection('[' + selection + ']()')
+    }
+    // Common.insertLabel(cm, '[]()');
+    let dialog = {
+      show: true,
+      title: '插入链接',
+      formElements: [{
+        //Input、Select、Checkbox、Radio、Switch
+        label: '链接地址:',
+        type: 'input',
+        value: 'http://'
+      }, {
+        label: '链接内容',
+        type: 'input',
+        value: defaultText
+      }],
+      formButtons: [{
+        text: '取消',
+        type: 'text',
+        handler: function() {
+          _this.hideDialog();
+        }
+      }, {
+        text: '确定',
+        type: 'primary',
+        handler: function() {
+          let url = dialog.formElements[0].value;
+          let urlText = dialog.formElements[1].value;
+          let link = '[' + urlText + '](' + url + ')';
+          cm.replaceSelection(link)
+          _this.hideDialog();
+        }
+      }]
+    }
+    _this.showDialog(dialog);
   },
-  // 非现实命令
-  t: function(cm) {
+  image: function(cm, _this) {
+    let dialog = {
+      show: true,
+      title: '上传图片',
+      showClose:false,
+      formElements: [{
+        type: 'file',
+        accept: 'image/jpeg, image/jpg, image/png, image/bmp',
+        handler: function(file) {
+          console.log('image this');
+          console.log(file);
+          let filePromise = requestImageUploadFromLocal(file);
+          // add progress 
+          _this.$set(_this.dialogInfo, 'progress', 0)
+
+          filePromise.save({
+            onprogress: function(e) {
+            // change progress
+              _this.dialogInfo.progress = parseInt(e.percent);
+            }
+          }).then(function(file) {
+            console.log('uploaded file info');
+            console.log(file);
+
+            let url = file.url();
+            let mdImage = '![](' + url + ')';
+            let pos = cm.getCursor('from');
+            cm.replaceRange(mdImage, pos);
+
+            // when success, delete progress
+            delete _this.dialogInfo.progress;
+            _this.hideDialog()
+          },function(err) {
+          	console.log(err);
+          })
+          return false;
+          // return new Promise(function() {},function() {});
+        }
+      }]
+    }
+    _this.showDialog(dialog);
+    // console.log(dialog);
+    // let file = dialog.showOpenDialog({
+    //   title: '选择图片',
+    //   filters: [{ name: '图片', extensions: ['jpg', 'png', 'gif', 'bmp'] }],
+    //   properties: ['openFile']
+    // })
+    // console.log(file[0]);
+
+  },
+  // 不显示在工具栏的命令，仅支持快捷键
+  t: function(cm) { // Ctrl+T
     let pos = cm.getCursor('from');
     let currentContent = cm.getLine(pos.line);
     if (currentContent.trim()[0] == '#') {
@@ -127,6 +181,19 @@ export const toolbarHandlers = {
     } else {
       Common.setStartLabel(cm, '# ')
     }
+  },
+  linkWithoutDialog: function(cm) { // Ctrl+Shift+L
+    if (cm.somethingSelected()) {
+      let selection = cm.getSelection();
+      cm.replaceSelection('[' + selection + ']()')
+    } else {
+      Common.insertLabel(cm, '[]()');
+    }
+    let pos = cm.getCursor();
+    cm.setCursor({
+      line: pos.line,
+      ch: pos.ch - 1
+    })
   }
 }
 
@@ -167,3 +234,64 @@ let Common = (function() {
     insertLabel: insertLabel
   }
 })()
+
+
+/*
+
+dialog format
+a full dialog 
+{
+  show: true,
+  title: '插入链接',
+  formElements: [{
+      //Input、Select、Checkbox、Radio、Switch
+      label: '链接地址:',
+      type: 'input',
+      value: 'http://'
+    }, {
+      label: '链接内容',
+      type: 'input',
+      value: defaultText
+    },
+    {
+      type: 'select',
+      value: '',
+      label: '选择地址:',
+      options: [{
+        label: 'label 1',
+        value: 'shanghai'
+      }, {
+        label: 'label 2',
+        value: 'beijing'
+      }]
+    }
+  ],
+  formButtons: [{
+    text: '取消',
+    type: 'text',
+    handler: function() {
+      console.log('btn cancel clicked');
+      _this.hideDialog();
+    }
+  }, {
+    text: '确定',
+    type: 'primary',
+    handler: function() {
+      console.log('btn confirm clicked');
+      console.log(defaultText);
+      console.log('url:' + dialog.formElements[0].value);
+      console.log('url text:' + dialog.formElements[1].value);
+      let url = dialog.formElements[0].value;
+      let urlText = dialog.formElements[1].value;
+      let link = '[' + urlText + '](' + url + ')';
+      cm.replaceSelection(link)
+      _this.hideDialog();
+
+    }
+  }]
+}
+
+
+
+
+*/

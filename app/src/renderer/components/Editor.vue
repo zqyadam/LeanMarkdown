@@ -5,7 +5,7 @@
         <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)"></el-button>
       </el-tooltip>
     </el-button-group>
-    <div class="half">
+    <div class="half" v-loading="loading">
       <section class="half-item">
         <div class="fit">
           <textarea id="editor"></textarea>
@@ -17,8 +17,27 @@
         </div>
       </section>
     </div>
-    <el-dialog title="a dialog" v-model="dialogVisible" >
-    {{dialogContent}}
+    <!-- a very complex dialog -_-!!  -->
+    <el-dialog v-model="dialogInfo.show" :title="dialogInfo.title" :close-on-click-modal="false" :show-close="dialogInfo.showClose">
+      <template v-for="(element,index) in dialogInfo.formElements">
+        <template v-if="element.type === 'file'">
+          <el-upload class="avatar-uploader" :before-upload="element.handler" action="" :show-file-list="false" select :accept="element.accept">
+            <i class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+          <el-progress :text-inside="true" :stroke-width="18" :percentage="dialogInfo.progress"></el-progress>
+        </template>
+        <el-form v-else label-width="80px" label-position="right">
+          <el-form-item :label="element.label">
+            <el-input v-if="element.type === 'input'" v-model="element.value"></el-input>
+            <el-select v-if="element.type === 'select'" v-model="element.value">
+              <el-option v-for="option in element.options" :label="option.label" :value="option.value"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </template>
+      <div slot="footer" class="dialog-footer">
+        <el-button v-for="button in dialogInfo.formButtons" :type="button.type" v-text="button.text" @click="button.handler"></el-button>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -26,6 +45,7 @@
 /* fake data */
 import fakeData from '../fake/data.js'
 // fake data end 
+
 
 import {
   requestLogout
@@ -40,6 +60,10 @@ import {
   toolbarIconTips,
   toolbarHandlers
 } from '../js/defaultToolbar.js'
+import {
+  requestImageUploadFromLocal
+} from '../js/api.js'
+
 
 import CodeMirror from 'codemirror/lib/codemirror.js'
 import 'codemirror/addon/selection/active-line.js'
@@ -52,7 +76,6 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/markdown/markdown.js'
 // import _ from 'lodash'
 
-console.log(CodeMirror.commands.newlineAndIndentContinueMarkdownList);
 
 // import marked from '../js/markdownSettings.js'
 import marked from 'marked'
@@ -95,8 +118,14 @@ hljs.configure({
 export default {
   data() {
       return {
-        dialogContent:'',
-        dialogVisible:true,
+        loading: false,
+        dialogInfo: {
+          show: false,
+          title: '',
+          showClose: true,
+          // progress:0,
+          formElements: []
+        },
         MdContent: '',
         cm: null,
         rendering: false,
@@ -104,127 +133,35 @@ export default {
         toolbarIconsClass: toolbarIconsClass,
         toolbarIconTips: toolbarIconTips,
         toolbarHandlers: toolbarHandlers,
-        tools: [
-          // {
-          //   name: 'undo',
-          //   icon: 'z-undo',
-          //   tip: '撤销',
-          //   callback: this.undo
-          // }, {
-          //   name: 'redo',
-          //   icon: 'z-redo',
-          //   tip: '重做',
-          //   callback: this.redo
-          // },
-          { //
-            name: 'fontLarge',
-            icon: 'z-fangda',
-            tip: '放大字体',
-            callback: function() {}
-          }, { //
-            name: 'fontSmall',
-            icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
-            tip: '缩小字体',
-            callback: function() {}
-          },
-          /*{
-            name: 'bold',
-            icon: 'z-bold',
-            tip: '加粗',
-            callback: this.bold
-          }, {
-            name: 'italic',
-            icon: 'z-italic',
-            tip: '斜体',
-            callback: this.italic
-          }, {
-            name: 'quote',
-            icon: 'z-yinyong',
-            tip: '引用',
-            callback: this.quote
-          }, 
-          {
-            name: 'h1',
-            icon: 'z-h',
-            tip: '标题1',
-            callback: this.h1
-          }, 
-          {
-            name: 'h2',
-            icon: 'z-h1',
-            tip: '标题2',
-            callback: function() {}
-          },
-          {
-            name: 'h3',
-            icon: 'z-h3',
-            tip: '标题3',
-            callback: function() {}
-          }, {
-            name: 'h4',
-            icon: 'z-h2',
-            tip: '标题4',
-            callback: function() {}
-          }, {
-            name: 'h5',
-            icon: 'z-h5',
-            tip: '标题5',
-            callback: function() {}
-          }, {
-            name: 'h6',
-            icon: 'z-h4',
-            tip: '标题6',
-            callback: function(cm) {
-              console.log(cm);
-            }
-          },  
-          {
-            name: 'ul',
-            icon: 'z-wuxuliebiao1',
-            tip: '无序列表',
-            callback: function() {}
-          }, {
-            name: 'ol',
-            icon: 'z-youxuliebiao',
-            tip: '有序列表',
-            callback: function() {}
-          }, 
-          {
-            name: 'hr',
-            icon: 'z-hengxian',
-            tip: '横线',
-            callback: function() {}
-          }, {
-            name: 'link',
-            icon: 'z-module-link',
-            tip: '链接',
-            callback: function() {}
-          },*/
-          {
-            name: 'image',
-            icon: 'z-tupian',
-            tip: '图片',
-            callback: function() {}
-          }, {
-            name: 'inlineCode',
-            icon: 'z-ai-code',
-            tip: '行内代码',
-            callback: function() {}
-          }, {
-            name: 'blockCode',
-            icon: 'z-daimakuai',
-            tip: '代码块',
-            callback: function() {}
-          }, {
-            name: 'logout',
-            icon: 'z-logout',
-            tip: '退出',
-            callback: function() {
-              requestLogout()
-              console.log(this);
-            }
+        tools: [{ //
+          name: 'fontLarge',
+          icon: 'z-fangda',
+          tip: '放大字体',
+          callback: function() {}
+        }, { //
+          name: 'fontSmall',
+          icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
+          tip: '缩小字体',
+          callback: function() {}
+        }, {
+          name: 'inlineCode',
+          icon: 'z-ai-code',
+          tip: '行内代码',
+          callback: function() {}
+        }, {
+          name: 'blockCode',
+          icon: 'z-daimakuai',
+          tip: '代码块',
+          callback: function() {}
+        }, {
+          name: 'logout',
+          icon: 'z-logout',
+          tip: '退出',
+          callback: function() {
+            requestLogout()
+            console.log(this);
           }
-        ]
+        }]
       }
     },
     computed: {
@@ -246,10 +183,20 @@ export default {
           this.toolbarHandlers[name](this.cm, this)
         }
       },
-      showDialog: function(dialogContent, options) {
-        console.log(dialogContent);
-        this.dialogContent = dialogContent;
-        this.dialogVisible = true;
+      showDialog: function(dialog) {
+        console.log(dialog);
+        for (let key in dialog) {
+          if (dialog[key]) {
+            this.dialogInfo[key] = dialog[key];
+          }
+        }
+        return
+        this.dialogInfo.formElements = dialog.formElements;
+        this.dialogInfo.formButtons = dialog.formButtons;
+        this.dialogInfo.show = true;
+      },
+      hideDialog: function() {
+        this.dialogInfo.show = false;
       },
       unh1: function() {
         let cm = this.cm;
@@ -317,6 +264,32 @@ export default {
         }
 
       })
+      this.cm.on('drop', function(cm, e) {
+        console.log(cm.getCursor('from'));
+        e.preventDefault()
+        console.log(e);
+        console.log(e.dataTransfer.files);
+        let file = e.dataTransfer.files[0];
+        let imageType = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif']
+        console.log(imageType.indexOf(file.type));
+        if (imageType.indexOf(file.type) !== -1) {
+          _this.loading = true;
+          let filePromise = requestImageUploadFromLocal(file);
+          filePromise.save({
+            onprogress: function(e) {
+              // change progress
+            }
+          }).then(function(file) {
+            let url = file.url();
+            let mdImage = '![](' + url + ')';
+            let pos = cm.getCursor('from');
+            cm.replaceRange(mdImage, pos);
+            _this.loading = false;
+          }, function(err) {
+            _this.loading = false;
+          })
+        }
+      })
 
       this.cm.setOption('extraKeys', {
         'Enter': "newlineAndIndentContinueMarkdownList",
@@ -350,8 +323,14 @@ export default {
         'Ctrl-L': () => {
           this.execuateCallback('link')
         },
+        'Shift-Ctrl-L': () => {
+          this.execuateCallback('linkWithoutDialog')
+        },
         'Ctrl-T': () => {
           this.execuateCallback('t')
+        },
+        'Ctrl-P': () => {
+          this.execuateCallback('image')
         },
         'Shift-Ctrl-1': this.unh1,
       })
@@ -438,5 +417,37 @@ export default {
   height: 100%;
   margin: 0 5px;
   font-size: 18px;
+}
+
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: #20a0ff;
+}
+
+.avatar-uploader {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  line-height: 178px;
+  text-align: center;
 }
 </style>
