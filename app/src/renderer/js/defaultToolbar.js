@@ -126,7 +126,7 @@ export const toolbarHandlers = {
     let dialog = {
       show: true,
       title: '上传图片',
-      showClose:false,
+      showClose: false,
       formElements: [{
         type: 'file',
         accept: 'image/jpeg, image/jpg, image/png, image/bmp',
@@ -135,27 +135,48 @@ export const toolbarHandlers = {
           console.log(file);
           let filePromise = requestImageUploadFromLocal(file);
           // add progress 
-          _this.$set(_this.dialogInfo, 'progress', 0)
-
+          // _this.$set(_this.dialogInfo, 'progress', 0)
+          _this.loading = true;
+          _this.loadingText = '准备开始上传...';
           filePromise.save({
             onprogress: function(e) {
-            // change progress
-              _this.dialogInfo.progress = parseInt(e.percent);
+              // change progress
+              // _this.dialogInfo.progress = parseInt(e.percent);
+              if (parseInt(e.percent) === 100) {
+                _this.loadingText = '即将上传完成... \\(^o^)/';
+              } else {
+                _this.loadingText = '拼命上传中，已上传' + parseInt(e.percent) + '%';
+              }
             }
           }).then(function(file) {
             console.log('uploaded file info');
             console.log(file);
 
             let url = file.url();
-            let mdImage = '![](' + url + ')';
-            let pos = cm.getCursor('from');
-            cm.replaceRange(mdImage, pos);
+
+            if (cm.somethingSelected()) {
+              let selection = cm.getSelection();
+              let mdImage = '![' + selection + '](' + url + ')';
+              cm.replaceSelection(mdImage);
+            } else {
+              let mdImage = '![](' + url + ')';
+              let pos = cm.getCursor('from');
+              cm.replaceRange(mdImage, pos);
+              cm.setCursor({
+                line: pos.line,
+                ch: pos.ch + 2
+              });
+              cm.replaceSelection('图像描述', 'around');
+            }
 
             // when success, delete progress
-            delete _this.dialogInfo.progress;
-            _this.hideDialog()
-          },function(err) {
-          	console.log(err);
+            // delete _this.dialogInfo.progress;
+            _this.hideDialog();
+            _this.loading = false;
+          }, function(err) {
+            _this.hideDialog();
+            _this.loading = false;
+            console.log(err);
           })
           return false;
           // return new Promise(function() {},function() {});

@@ -5,7 +5,7 @@
         <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)"></el-button>
       </el-tooltip>
     </el-button-group>
-    <div class="half" v-loading="loading">
+    <div class="half" v-loading="loading" :element-loading-text="loadingText">
       <section class="half-item">
         <div class="fit">
           <textarea id="editor"></textarea>
@@ -24,7 +24,7 @@
           <el-upload class="avatar-uploader" :before-upload="element.handler" action="" :show-file-list="false" select :accept="element.accept">
             <i class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
-          <el-progress :text-inside="true" :stroke-width="18" :percentage="dialogInfo.progress"></el-progress>
+          <!-- <el-progress :text-inside="true" :stroke-width="18" :percentage="dialogInfo.progress"></el-progress> -->
         </template>
         <el-form v-else label-width="80px" label-position="right">
           <el-form-item :label="element.label">
@@ -119,6 +119,7 @@ export default {
   data() {
       return {
         loading: false,
+        loadingText: '',
         dialogInfo: {
           show: false,
           title: '',
@@ -264,26 +265,48 @@ export default {
         }
 
       })
+
+      // drag and drop pictures
       this.cm.on('drop', function(cm, e) {
-        console.log(cm.getCursor('from'));
         e.preventDefault()
-        console.log(e);
-        console.log(e.dataTransfer.files);
+
         let file = e.dataTransfer.files[0];
         let imageType = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif']
+
         console.log(imageType.indexOf(file.type));
         if (imageType.indexOf(file.type) !== -1) {
           _this.loading = true;
+          // let pos = cm.getCursor('start');
+          _this.loadingText = '准备开始上传...';
           let filePromise = requestImageUploadFromLocal(file);
           filePromise.save({
             onprogress: function(e) {
               // change progress
+              if (parseInt(e.percent) === 100) {
+                _this.loadingText = '即将上传完成... \\(^o^)/';
+              } else {
+                _this.loadingText = '拼命上传中，已上传' + parseInt(e.percent) + '%';
+              }
             }
           }).then(function(file) {
             let url = file.url();
-            let mdImage = '![](' + url + ')';
-            let pos = cm.getCursor('from');
-            cm.replaceRange(mdImage, pos);
+
+            if (cm.somethingSelected()) {
+              let selection = cm.getSelection();
+              let mdImage = '![' + selection + '](' + url + ')';
+              cm.replaceSelection(mdImage);
+
+            } else {
+              let mdImage = '![](' + url + ')';
+              let pos = cm.getCursor('start');
+              cm.replaceRange(mdImage, pos);
+              cm.setCursor({
+                line: pos.line,
+                ch: pos.ch + 2
+              });
+              cm.replaceSelection('图像描述', 'around');
+            }
+
             _this.loading = false;
           }, function(err) {
             _this.loading = false;
