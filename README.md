@@ -1,24 +1,17 @@
 # adamarkdown
 
-> An electron-vue project
+> A markdown editor based on Electron and Vue
 
-## Build Setup
+一个基于Electron和Vue的markdown编辑器，数据存储在Leancloud
 
-``` bash
-# install dependencies
-npm install
 
-# serve with hot reload at localhost:9080
-npm run dev
-
-# build electron app for production
-npm run build
-
-# run webpack in production
-npm run pack
-```
-More information can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/docs/npm_scripts.html).
-
----
-
-This project was generated from [electron-vue](https://github.com/SimulatedGREG/electron-vue) using [vue-cli](https://github.com/vuejs/vue-cli). Documentation about this project can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/index.html).
+# Todos
+- [ ] 工具栏（部分）
+- [x] 图片上传（直接上传、拖拽上传、粘贴上传）
+- [ ] 视图同步
+- [ ] 文档目录toc
+- [ ] 代码高亮
+- [ ] 本地编辑、保存
+- [ ] 文件分类
+- [ ] 文件管理
+- [ ] 图像管理
