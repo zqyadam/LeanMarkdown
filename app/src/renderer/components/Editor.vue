@@ -24,7 +24,6 @@
           <el-upload class="avatar-uploader" :before-upload="element.handler" action="" :show-file-list="false" select :accept="element.accept">
             <i class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
-          <!-- <el-progress :text-inside="true" :stroke-width="18" :percentage="dialogInfo.progress"></el-progress> -->
         </template>
         <el-form v-else label-width="80px" label-position="right">
           <el-form-item :label="element.label">
@@ -48,7 +47,9 @@ import fakeData from '../fake/data.js'
 
 
 import {
-  requestLogout
+  requestLogout,
+  requestImageUploadFromStream,
+  requestImageUploadFromLocal
 } from '../js/api.js'
 import 'github-markdown-css/github-markdown.css'
 import 'highlight.js/styles/monokai-sublime.css'
@@ -60,9 +61,6 @@ import {
   toolbarIconTips,
   toolbarHandlers
 } from '../js/defaultToolbar.js'
-import {
-  requestImageUploadFromLocal
-} from '../js/api.js'
 
 
 import CodeMirror from 'codemirror/lib/codemirror.js'
@@ -123,8 +121,6 @@ export default {
         dialogInfo: {
           show: false,
           title: '',
-          showClose: true,
-          // progress:0,
           formElements: []
         },
         MdContent: '',
@@ -311,6 +307,87 @@ export default {
           }, function(err) {
             _this.loading = false;
           })
+        }
+      })
+
+
+      // 
+      this.cm.on('paste', function(cm, changeObject) {
+        console.log(changeObject.clipboardData);
+        let items = changeObject.clipboardData.items;
+        console.log(items);
+        console.log(changeObject.clipboardData.types);
+        let clipboardData = changeObject.clipboardData;
+        if (clipboardData) {
+          let items = clipboardData.items;
+          if (!items) {
+            return
+          }
+
+          let item = items[0];
+          let types = clipboardData.types || [];
+          for (let i = 0; i < types.length; i++) {
+            if (types[i] === 'Files') {
+              item = items[i];
+              break;
+            }
+          }
+
+          if (item && item.kind == 'file' && item.type.match(/^image\//i)) {
+            console.log(item.getAsFile());
+            let imgFile = item.getAsFile();
+            let fileType = item.type.replace(/^image\/(.*)/i, '$1')
+            let guid = new Date().getTime();
+            // let guid = [time.getFullYear(),(time.getMonth()+1),time.getDate(),time.getHours(),time.getMinutes(),time.getSeconds()].join('_')
+            console.log(guid);
+            let fileName = 'ScreenShot' + guid + '.' + fileType;
+            let reader = new FileReader();
+            reader.readAsDataURL(imgFile);
+            reader.onload = function(e) {
+              _this.loading = true;
+              _this.loadingText = '准备开始上传...';
+              let imgPromise = requestImageUploadFromStream(fileName, this.result);
+              imgPromise.save({
+                onprogress: function(e) {
+                  // { loaded: 1234, total: 2468, percent: 50 }
+                  if (parseInt(e.percent) === 100) {
+                    _this.loadingText = '即将上传完成... \\(^o^)/';
+                  } else {
+                    _this.loadingText = '拼命上传中，已上传' + parseInt(e.percent) + '%';
+                  }
+                }
+              }).then(function(file) {
+                let url = file.url();
+
+                if (cm.somethingSelected()) {
+                  let selection = cm.getSelection();
+                  let mdImage = '![' + selection + '](' + url + ')';
+                  cm.replaceSelection(mdImage);
+
+                } else {
+                  let mdImage = '![](' + url + ')';
+                  let pos = cm.getCursor('start');
+                  cm.replaceRange(mdImage, pos);
+                  cm.setCursor({
+                    line: pos.line,
+                    ch: pos.ch + 2
+                  });
+                  cm.replaceSelection('图像描述', 'around');
+                }
+                _this.$message({
+                  message:'图像上传成功',
+                  type:'success'
+                })
+                _this.loading = false;
+                _
+              }, function(err) {
+                _this.$message.error('图像上传失败！')
+                _this.loading = false;
+              })
+
+            }
+
+          }
         }
       })
 

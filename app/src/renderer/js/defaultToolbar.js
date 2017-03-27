@@ -37,7 +37,7 @@ export const toolbarIconTips = {
   'ol': '有序列表',
   'hr': '横线',
   'link': '链接',
-  'image': '图片'
+  'image': '图像'
 }
 export const toolbarHandlers = {
   undo: function(cm) {
@@ -125,8 +125,7 @@ export const toolbarHandlers = {
   image: function(cm, _this) {
     let dialog = {
       show: true,
-      title: '上传图片',
-      showClose: false,
+      title: '上传图像',
       formElements: [{
         type: 'file',
         accept: 'image/jpeg, image/jpg, image/png, image/bmp',
@@ -168,9 +167,6 @@ export const toolbarHandlers = {
               });
               cm.replaceSelection('图像描述', 'around');
             }
-
-            // when success, delete progress
-            // delete _this.dialogInfo.progress;
             _this.hideDialog();
             _this.loading = false;
           }, function(err) {
@@ -184,14 +180,6 @@ export const toolbarHandlers = {
       }]
     }
     _this.showDialog(dialog);
-    // console.log(dialog);
-    // let file = dialog.showOpenDialog({
-    //   title: '选择图片',
-    //   filters: [{ name: '图片', extensions: ['jpg', 'png', 'gif', 'bmp'] }],
-    //   properties: ['openFile']
-    // })
-    // console.log(file[0]);
-
   },
   // 不显示在工具栏的命令，仅支持快捷键
   t: function(cm) { // Ctrl+T
