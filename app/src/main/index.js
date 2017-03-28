@@ -10,8 +10,8 @@ function createWindow() {
    * Initial window options
    */
   mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800
+    height: 640,
+    width: 820
   })
 
   mainWindow.loadURL(winURL)

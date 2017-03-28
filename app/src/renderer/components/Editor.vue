@@ -12,7 +12,7 @@
         </div>
       </section>
       <section class="half-item">
-        <div class="previewer-container">
+        <div class="previewer-container" id="previewer">
           <div class="markdown-body" id="HTMLContent" v-html="HTMLContent"></div>
         </div>
       </section>
@@ -126,6 +126,7 @@ export default {
         MdContent: '',
         cm: null,
         rendering: false,
+        scrolling: false,
         toolbarIcons: toolbarIcons,
         toolbarIconsClass: toolbarIconsClass,
         toolbarIconTips: toolbarIconTips,
@@ -311,7 +312,7 @@ export default {
       })
 
 
-      // 
+      // 粘贴截图
       this.cm.on('paste', function(cm, changeObject) {
         console.log(changeObject.clipboardData);
         let items = changeObject.clipboardData.items;
@@ -375,8 +376,8 @@ export default {
                   cm.replaceSelection('图像描述', 'around');
                 }
                 _this.$message({
-                  message:'图像上传成功',
-                  type:'success'
+                  message: '图像上传成功',
+                  type: 'success'
                 })
                 _this.loading = false;
                 _
@@ -388,6 +389,25 @@ export default {
             }
 
           }
+        }
+      })
+
+      //  滚动监听
+      this.cm.on('scroll', function(cm) {
+
+        if (!_this.scrolling) {
+          setTimeout(function() {
+            let scrollObj = cm.getScrollInfo();
+            let persent = scrollObj.top / scrollObj.height;
+            let previewer = document.getElementById('previewer');
+            previewer.scrollTop = persent * previewer.scrollHeight;
+
+
+            let line = cm.lineAtHeight(scrollObj.top);
+            console.log('line num:'+line);
+            _this.scrolling = false
+          }, 30)
+          _this.scrolling = true;
         }
       })
 
@@ -438,6 +458,13 @@ export default {
 
       let defaultContent = fakeData
       this.cm.setValue(defaultContent)
+
+
+
+      // let lineH = lingHandle.height();
+
+      let mode = this.cm.getMode();
+      console.log(mode);
     }
 }
 </script>
@@ -465,12 +492,15 @@ export default {
   border: 1px solid blue;
 }
 
+
 /* toolbar css */
-.dark{
-  background-color: #324057;
-  color:#EFF2F7;
-  border:none;
+
+.dark {
+  background-color: rgb(68, 68, 68);
+  color: #EFF2F7;
+  border: none;
 }
+
 
 /* editor css */
 
@@ -505,6 +535,7 @@ export default {
   width: 100%;
   margin: 0px;
   overflow-y: auto;
+  background-color: rgb(249, 249, 245);
 }
 
 
@@ -512,9 +543,11 @@ export default {
 
 .markdown-body {
   box-sizing: border-box;
-  margin:5px;
+  margin: 5px;
   padding: 15px;
-  border: 3px dashed #ccc;  
+  border: 3px dashed #ccc;
+  font-size: 18px;
+  font-family: 'Consolas', '微软雅黑';
 }
 </style>
 <style>
@@ -522,6 +555,8 @@ export default {
   height: 100%;
   margin: 0 5px;
   font-size: 18px;
+  background-color: rgb(249, 249, 245);
+  font-family: 'Consolas', '微软雅黑';
 }
 
 .avatar-uploader .el-upload {
