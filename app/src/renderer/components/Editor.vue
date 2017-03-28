@@ -1,8 +1,8 @@
 <template>
   <div class="main">
-    <el-button-group id="toolbar">
-      <el-tooltip v-for="tool in toolbarIcons" effect="dark" :content="toolbarIconTips[tool]?toolbarIconTips[tool]:tool" placement="bottom">
-        <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)"></el-button>
+    <el-button-group id="toolbar" class="dark">
+      <el-tooltip v-for="tool in toolbarIcons" effect="light" :content="toolbarIconTips[tool]?toolbarIconTips[tool]:tool" placement="bottom">
+        <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)" class="dark"></el-button>
       </el-tooltip>
     </el-button-group>
     <div class="half" v-loading="loading" :element-loading-text="loadingText">
@@ -458,8 +458,6 @@ export default {
 }
 
 .half-item {
-  /*flex-grow: 1;*/
-  /*flex-shrink:1;*/
   width: 50%;
 }
 
@@ -467,6 +465,12 @@ export default {
   border: 1px solid blue;
 }
 
+/* toolbar css */
+.dark{
+  background-color: #324057;
+  color:#EFF2F7;
+  border:none;
+}
 
 /* editor css */
 
@@ -508,8 +512,9 @@ export default {
 
 .markdown-body {
   box-sizing: border-box;
-  margin: 0 auto;
-  padding: 45px;
+  margin:5px;
+  padding: 15px;
+  border: 3px dashed #ccc;  
 }
 </style>
 <style>
