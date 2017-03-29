@@ -126,7 +126,8 @@ export default {
         MdContent: '',
         cm: null,
         rendering: false,
-        scrolling: false,
+        editorScrolling: false,
+        previewerScrolling: false,
         toolbarIcons: toolbarIcons,
         toolbarIconsClass: toolbarIconsClass,
         toolbarIconTips: toolbarIconTips,
@@ -214,6 +215,79 @@ export default {
           })
 
         }
+      },
+      editorScroll: function(cm, e) {
+        if (this.editorScrolling) {
+          this.editorScrolling = false;
+          return
+        }
+        this.previewerScrolling = true;
+        let scrollObj = this.cm.getScrollInfo();
+        let percent = scrollObj.top / scrollObj.height;
+        let previewer = document.getElementById('previewer');
+        previewer.scrollTop = percent * previewer.scrollHeight;
+        return
+
+
+
+
+        let _this = this;
+        console.log(document.querySelector(".CodeMirror-scroll"));
+        // if (!_this.previewerScrolling) {
+        if (!_this.editorScrolling) {
+          console.log('editor scrolling ');
+          document.getElementById('previewer').removeEventListener('scroll', _this.previewerScroll)
+          setTimeout(function() {
+            let scrollObj = _this.cm.getScrollInfo();
+            let percent = scrollObj.top / scrollObj.height;
+            let previewer = document.getElementById('previewer');
+            previewer.scrollTop = percent * previewer.scrollHeight;
+            // let line = cm.lineAtHeight(scrollObj.top);
+            // console.log('line num:' + line);
+            document.getElementById('previewer').addEventListener('scroll', _this.previewerScroll)
+            _this.editorScrolling = false
+          }, 1000)
+          _this.editorScrolling = true;
+        }
+        // }
+      },
+      previewerScroll: function(e) {
+        if (this.previewerScrolling) {
+          this.previewerScrolling = false;
+          return;
+        }
+        this.editorScrolling = true;
+        let previewer1 = e.target;
+        let percent = previewer1.scrollTop / previewer1.scrollHeight;
+        let scrollObj = this.cm.getScrollInfo();
+        let editorTop = percent * scrollObj.height;
+        this.cm.scrollTo(null, editorTop)
+
+
+
+
+        return;
+
+
+
+        let _this = this;
+        let previewer = e.target;
+        // if (!_this.editorScrolling) {
+        if (!_this.previewerScrolling) {
+          console.log('previewer scrolling ');
+          _this.cm.off('scroll', _this.editorScroll)
+          setTimeout(function() {
+            let percent = previewer.scrollTop / previewer.scrollHeight;
+            let scrollObj = _this.cm.getScrollInfo();
+            let editorTop = percent * scrollObj.height;
+            _this.cm.scrollTo(null, editorTop)
+            _this.cm.on('scroll', _this.editorScroll);
+            _this.previewerScrolling = false
+          }, 1000)
+          _this.previewerScrolling = true;
+        }
+        // }
+
       }
     },
     mounted: function() {
@@ -393,23 +467,9 @@ export default {
       })
 
       //  滚动监听
-      this.cm.on('scroll', function(cm) {
+      this.cm.on('scroll', this.editorScroll)
 
-        if (!_this.scrolling) {
-          setTimeout(function() {
-            let scrollObj = cm.getScrollInfo();
-            let persent = scrollObj.top / scrollObj.height;
-            let previewer = document.getElementById('previewer');
-            previewer.scrollTop = persent * previewer.scrollHeight;
-
-
-            let line = cm.lineAtHeight(scrollObj.top);
-            console.log('line num:'+line);
-            _this.scrolling = false
-          }, 30)
-          _this.scrolling = true;
-        }
-      })
+      document.getElementById('previewer').addEventListener('scroll', _this.previewerScroll)
 
       this.cm.setOption('extraKeys', {
         'Enter': "newlineAndIndentContinueMarkdownList",
@@ -539,13 +599,26 @@ export default {
 }
 
 
+/* scrollbar */
+
+
+/*.scrollbar::-webkit-scrollbar {
+  width: 12px;
+  background-color: rgb(241, 241, 241);
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgb(193, 193, 193);
+}*/
+
+
 /* github-markdown.css */
 
 .markdown-body {
   box-sizing: border-box;
   margin: 5px;
   padding: 15px;
-  border: 3px dashed #ccc;
+  border: 2px dashed rgb(187, 187, 187);
   font-size: 18px;
   font-family: 'Consolas', '微软雅黑';
 }
