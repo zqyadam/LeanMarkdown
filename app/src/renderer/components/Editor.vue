@@ -68,8 +68,8 @@ import 'codemirror/addon/selection/active-line.js'
 import 'codemirror/addon/edit/closebrackets.js'
 import 'codemirror/addon/edit/matchbrackets.js'
 import 'codemirror/addon/edit/continuelist.js'
-import 'codemirror/addon/dialog/dialog.css'
-import 'codemirror/addon/dialog/dialog.js'
+// import 'codemirror/addon/dialog/dialog.css'
+// import 'codemirror/addon/dialog/dialog.js'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/markdown/markdown.js'
 // import _ from 'lodash'
@@ -217,41 +217,19 @@ export default {
         }
       },
       editorScroll: function(cm, e) {
+        let _this = this;
         if (this.editorScrolling) {
           this.editorScrolling = false;
           return
         }
         this.previewerScrolling = true;
-        let scrollObj = this.cm.getScrollInfo();
+        let scrollObj = _this.cm.getScrollInfo();
         let percent = scrollObj.top / scrollObj.height;
         let previewer = document.getElementById('previewer');
         previewer.scrollTop = percent * previewer.scrollHeight;
-        return
-
-
-
-
-        let _this = this;
-        console.log(document.querySelector(".CodeMirror-scroll"));
-        // if (!_this.previewerScrolling) {
-        if (!_this.editorScrolling) {
-          console.log('editor scrolling ');
-          document.getElementById('previewer').removeEventListener('scroll', _this.previewerScroll)
-          setTimeout(function() {
-            let scrollObj = _this.cm.getScrollInfo();
-            let percent = scrollObj.top / scrollObj.height;
-            let previewer = document.getElementById('previewer');
-            previewer.scrollTop = percent * previewer.scrollHeight;
-            // let line = cm.lineAtHeight(scrollObj.top);
-            // console.log('line num:' + line);
-            document.getElementById('previewer').addEventListener('scroll', _this.previewerScroll)
-            _this.editorScrolling = false
-          }, 1000)
-          _this.editorScrolling = true;
-        }
-        // }
       },
       previewerScroll: function(e) {
+        let _this = this;
         if (this.previewerScrolling) {
           this.previewerScrolling = false;
           return;
@@ -259,35 +237,9 @@ export default {
         this.editorScrolling = true;
         let previewer1 = e.target;
         let percent = previewer1.scrollTop / previewer1.scrollHeight;
-        let scrollObj = this.cm.getScrollInfo();
+        let scrollObj = _this.cm.getScrollInfo();
         let editorTop = percent * scrollObj.height;
-        this.cm.scrollTo(null, editorTop)
-
-
-
-
-        return;
-
-
-
-        let _this = this;
-        let previewer = e.target;
-        // if (!_this.editorScrolling) {
-        if (!_this.previewerScrolling) {
-          console.log('previewer scrolling ');
-          _this.cm.off('scroll', _this.editorScroll)
-          setTimeout(function() {
-            let percent = previewer.scrollTop / previewer.scrollHeight;
-            let scrollObj = _this.cm.getScrollInfo();
-            let editorTop = percent * scrollObj.height;
-            _this.cm.scrollTo(null, editorTop)
-            _this.cm.on('scroll', _this.editorScroll);
-            _this.previewerScrolling = false
-          }, 1000)
-          _this.previewerScrolling = true;
-        }
-        // }
-
+        _this.cm.scrollTo(null, editorTop)
       }
     },
     mounted: function() {
@@ -327,6 +279,7 @@ export default {
 
       // console.log(this.editor);
       this.cm.on('change', (cm, changeObj) => {
+
         if (!_this.rendering) {
           setTimeout(function() {
             _this.MdContent = cm.getValue();
