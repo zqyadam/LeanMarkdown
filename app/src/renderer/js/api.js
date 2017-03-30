@@ -2,7 +2,7 @@
 import { AV } from './av-min.js'
 import { APP_ID, APP_KEY } from './AVConfig.js'
 // in AVConfig.js
-/*
+/* template
 export let APP_ID = 'your_app_id';
 export let APP_KEY = 'your_app_key';
 

@@ -1,6 +1,6 @@
 import { requestImageUploadFromLocal } from './api.js'
 
-export const toolbarIcons = ['undo', 'redo', 'bold', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image'];
+export const toolbarIcons = ['undo', 'redo', 'bold', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image', 'inlineCode', 'blockCode'];
 
 export const toolbarIconsClass = {
   'undo': 'z-undo',
@@ -18,7 +18,9 @@ export const toolbarIconsClass = {
   'ol': 'z-youxuliebiao',
   'hr': 'z-hengxian',
   'link': 'z-module-link',
-  'image': 'z-tupian'
+  'image': 'z-tupian',
+  'inlineCode': 'z-ai-code',
+  'blockCode': 'z-daimakuai'
 }
 
 export const toolbarIconTips = {
@@ -37,7 +39,9 @@ export const toolbarIconTips = {
   'ol': '有序列表',
   'hr': '横线',
   'link': '链接',
-  'image': '图像'
+  'image': '图像',
+  'inlineCode': '行内代码',
+  'blockCode': '代码块'
 }
 export const toolbarHandlers = {
   undo: function(cm) {
@@ -181,6 +185,28 @@ export const toolbarHandlers = {
     }
     _this.showDialog(dialog);
   },
+  inlineCode: function(cm) {
+    Common.setWrapLabel(cm, '\`');
+  },
+  blockCode: function(cm) {
+    let defaultLang = 'javascript'
+    if (cm.somethingSelected()) {
+      let pos = cm.getCursor('from');
+      Common.setWrapLabel(cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`');
+      cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
+    } else {
+      let pos = cm.getCursor('start');
+      let lineContent = cm.getLine(pos.line);
+      if (lineContent.trim()) { // 如果当前行有内容
+        cm.setCursor({ line: pos.line + 1, ch: 0 }); // 鼠标设置到下一行头
+        Common.setWrapLabel(cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`\n'); //插入标签
+        cm.setSelection({ line: pos.line + 1, ch: 3 }, { line: pos.line + 1, ch: 3 + defaultLang.length })
+      } else { //当前行无内容
+        Common.setWrapLabel(cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`\n');
+        cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
+      }
+    }
+  },
   // 不显示在工具栏的命令，仅支持快捷键
   t: function(cm) { // Ctrl+T
     let pos = cm.getCursor('from');
@@ -210,15 +236,18 @@ export const toolbarHandlers = {
 
 let Common = (function() {
   /* 设置包围标签 */
-  function setWrapLabel(cm, wrapLabel) {
+  function setWrapLabel(cm, startLabel, endLabel = undefined) {
+    if (!endLabel) {
+      endLabel = startLabel;
+    }
     let pos = cm.getCursor('from');
     if (cm.somethingSelected()) { // 存在选中文本
       let selection = cm.getSelection();
-      let replaceContent = wrapLabel + selection + wrapLabel
+      let replaceContent = startLabel + selection + endLabel
       cm.replaceSelection(replaceContent)
     } else { // 没有选中文本
-      cm.replaceSelection(wrapLabel + wrapLabel, 'start')
-      cm.setCursor(pos.line, pos.ch + wrapLabel.length)
+      cm.replaceSelection(startLabel + endLabel, 'start')
+      cm.setCursor(pos.line, pos.ch + startLabel.length)
     }
   }
   /* 设置标题 */

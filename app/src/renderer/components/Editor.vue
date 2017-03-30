@@ -1,17 +1,27 @@
 <template>
   <div class="main">
-    <el-button-group id="toolbar" class="dark">
+    <el-button-group class="dark" id="toolbar">
       <el-tooltip v-for="tool in toolbarIcons" effect="light" :content="toolbarIconTips[tool]?toolbarIconTips[tool]:tool" placement="bottom">
         <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)" class="dark"></el-button>
       </el-tooltip>
+      <span class="split"></span>
+      <el-tooltip effect="light" content="实时预览">
+        <el-button icon="z-shuanglan" size="small" class="dark" :plain="true" @click="previewMode"></el-button>
+      </el-tooltip>
+      <el-tooltip effect="light" content="编辑模式">
+        <el-button icon="z-bianji" size="small" class="dark" :plain="true" @click="editMode"></el-button>
+      </el-tooltip>
+      <el-tooltip effect="light" content="阅读模式">
+        <el-button icon="z-computer" size="small" class="dark" :plain="true" @click="readMode"></el-button>
+      </el-tooltip>
     </el-button-group>
     <div class="half" v-loading="loading" :element-loading-text="loadingText">
-      <section class="half-item">
+      <section :style="{width:editWidth+'%'}" v-show="editShow">
         <div class="fit">
           <textarea id="editor"></textarea>
         </div>
       </section>
-      <section class="half-item">
+      <section :style="{width:readWidth+'%'}" style="max-width:1200px" v-show="readShow">
         <div class="previewer-container" id="previewer">
           <div class="markdown-body" id="HTMLContent" v-html="HTMLContent"></div>
         </div>
@@ -83,9 +93,7 @@ import hljs from 'highlight.js'
 // var renderTimeSum = 0;
 // var renderCount = 0;
 /* debug define rendering time varaible end */
-hljs.configure({
-  tabReplace: '  ' // 2 spaces
-})
+
 
 // var renderer = new marked.Renderer();
 // // code renderer
@@ -132,35 +140,29 @@ export default {
         toolbarIconsClass: toolbarIconsClass,
         toolbarIconTips: toolbarIconTips,
         toolbarHandlers: toolbarHandlers,
-        tools: [{ //
-          name: 'fontLarge',
-          icon: 'z-fangda',
-          tip: '放大字体',
-          callback: function() {}
-        }, { //
-          name: 'fontSmall',
-          icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
-          tip: '缩小字体',
-          callback: function() {}
-        }, {
-          name: 'inlineCode',
-          icon: 'z-ai-code',
-          tip: '行内代码',
-          callback: function() {}
-        }, {
-          name: 'blockCode',
-          icon: 'z-daimakuai',
-          tip: '代码块',
-          callback: function() {}
-        }, {
-          name: 'logout',
-          icon: 'z-logout',
-          tip: '退出',
-          callback: function() {
-            requestLogout()
-            console.log(this);
-          }
-        }]
+        editShow: true,
+        readShow: true,
+        editWidth:50,
+        readWidth:50,
+        // tools: [{ //
+        //   name: 'fontLarge',
+        //   icon: 'z-fangda',
+        //   tip: '放大字体',
+        //   callback: function() {}
+        // }, { //
+        //   name: 'fontSmall',
+        //   icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
+        //   tip: '缩小字体',
+        //   callback: function() {}
+        // }, {
+        //   name: 'logout',
+        //   icon: 'z-logout',
+        //   tip: '退出',
+        //   callback: function() {
+        //     requestLogout()
+        //     console.log(this);
+        //   }
+        // }]
       }
     },
     computed: {
@@ -172,7 +174,7 @@ export default {
         // renderTimeSum = 0;
         // renderCount = 0
         /* debug calculating rendering time end */
-        // console.log(Content);
+        console.log(Content);
         return Content;
       },
     },
@@ -240,26 +242,27 @@ export default {
         let scrollObj = _this.cm.getScrollInfo();
         let editorTop = percent * scrollObj.height;
         _this.cm.scrollTo(null, editorTop)
-      }
+      },
+      previewMode: function() {
+        this.readShow = true;
+        this.readWidth = 50;
+        this.editShow = true;
+        this.editWidth = 50;
+      },
+      editMode: function() {
+        this.editShow = true;
+        this.readShow = false;
+        this.editWidth = 100;
+      },
+      readMode: function() {
+        this.readShow = true;
+        this.editShow = false;
+        this.readWidth = 100;
+      },
+
     },
     mounted: function() {
-      hljs.configure({
-        tabReplace: '  ' // 2 spaces
-      })
 
-      marked.setOptions({
-        // renderer: renderer,
-        gfm: true,
-        tables: true,
-        breaks: true,
-        pedantic: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: false,
-        highlight: function(code, language) {
-          return hljs.highlightAuto(code, [language]).value;
-        }
-      });
 
       let editorDOM = document.getElementById('editor');
       let _this = this;
@@ -465,6 +468,12 @@ export default {
         'Ctrl-P': () => {
           this.execuateCallback('image')
         },
+        'Ctrl-K': () => {
+          this.execuateCallback('inlineCode')
+        },
+        'Shift-Ctrl-B': () => {
+          this.execuateCallback('blockCode')
+        },
         'Shift-Ctrl-1': this.unh1,
       })
 
@@ -478,6 +487,37 @@ export default {
 
       let mode = this.cm.getMode();
       console.log(mode);
+    },
+    created: function() {
+      hljs.configure({
+        tabReplace: '  ' // 2 spaces
+      })
+
+      let renderer = new marked.Renderer();
+      renderer.listitem = function(text) {
+        if (/^\s*\[[x ]\]\s*/.test(text)) {
+          text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
+            .replace(/^\s*\[x\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled /> ");
+
+          return '<li style="list-style: none">' + text + '</li>';
+        } else {
+          return '<li>' + text + '</li>';
+        }
+      };
+      marked.setOptions({
+        renderer: renderer,
+        gfm: true,
+        tables: true,
+        breaks: true,
+        pedantic: false,
+        sanitize: false,
+        smartLists: true,
+        smartypants: false,
+        highlight: function(code, language) {
+          return hljs.highlightAuto(code, [language]).value;
+        }
+      });
+
     }
 }
 </script>
@@ -487,6 +527,7 @@ export default {
   border: none;
   display: flex;
   flex-direction: column;
+  background-color: rgb(249, 249, 245);
 }
 
 .half {
@@ -495,6 +536,7 @@ export default {
   align-items: stretch;
   justify-content: center;
   height: 100%;
+  width: 100%;
 }
 
 .half-item {
@@ -508,10 +550,22 @@ export default {
 
 /* toolbar css */
 
+#toolbar {
+  display: flex;
+  flex-direction: row;
+  line-height: 1;
+}
+
 .dark {
   background-color: rgb(68, 68, 68);
   color: #EFF2F7;
   border: none;
+}
+
+.split {
+  border: 1.5px solid #fff;
+  margin: 3px 0px;
+  padding: 0;
 }
 
 
