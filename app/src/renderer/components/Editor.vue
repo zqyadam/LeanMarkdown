@@ -142,8 +142,9 @@ export default {
         toolbarHandlers: toolbarHandlers,
         editShow: true,
         readShow: true,
-        editWidth:50,
-        readWidth:50,
+        editWidth: 50,
+        readWidth: 50,
+        toc: [],
         // tools: [{ //
         //   name: 'fontLarge',
         //   icon: 'z-fangda',
@@ -174,11 +175,43 @@ export default {
         // renderTimeSum = 0;
         // renderCount = 0
         /* debug calculating rendering time end */
-        console.log(Content);
+        // console.log(Content);
+        console.log(JSON.stringify(this.toc));
+
+        
+        // let tocHTML = '\n<ul>';
+        // let level1 = [];
+        // this.toc.forEach(function (item) {
+        //     tocHTML += '<li><a href="#'+item.id+'">'+item.text+'<a></li>\n';
+        //   });
+        // tocHTML += '</ul>\n';
+          console.log(this.tocToTree(this.toc));
+        this.toc = [];
         return Content;
+        // return Content.replace(/<p class="markdown-toc">(.*)<\/p>/gi,tocHTML)
       },
     },
     methods: {
+      tocToTree: function(toc) {
+        let headlines = [];
+        let last = {};
+
+        for (let headline of Array.from(toc)) {
+          let level = headline.level || (headline.level = 1);
+          if (last[level - 1]) {
+            var name;
+            if (!last[name = level - 1].children) {
+              last[name].children = [];
+            }
+            last[level - 1].children.push(headline);
+          } else {
+            headlines.push(headline);
+          }
+          last[level] = headline;
+        }
+
+        return headlines;
+      },
       execuateCallback: function(name) {
         if (this.toolbarHandlers[name]) {
           this.toolbarHandlers[name](this.cm, this)
@@ -192,9 +225,7 @@ export default {
           }
         }
         return
-        this.dialogInfo.formElements = dialog.formElements;
-        this.dialogInfo.formButtons = dialog.formButtons;
-        this.dialogInfo.show = true;
+
       },
       hideDialog: function() {
         this.dialogInfo.show = false;
@@ -262,10 +293,58 @@ export default {
 
     },
     mounted: function() {
+      let _this = this;
 
+      hljs.configure({
+        tabReplace: '  ' // 2 spaces
+      })
+
+      let renderer = new marked.Renderer();
+      renderer.listitem = function(text) {
+        if (/^\s*\[[x ]\]\s*/.test(text)) {
+          text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
+            .replace(/^\s*\[x\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled /> ");
+
+          return '<li style="list-style: none">' + text + '</li>';
+        } else {
+          return '<li>' + text + '</li>';
+        }
+      };
+      renderer.heading = function(text, level) {
+        var isChinese = /[\u4e00-\u9fa5]+$/.test(text);
+        var id = (isChinese) ? escape(text).replace(/\%/g, "") : text.toLowerCase().replace(/[^\w]+/g, "-");
+
+        _this.toc.push({
+          level: level,
+          id: id,
+          text: text
+        });
+        return '<h' + level + ' id="' + id + '">' + text + '</h' + level + '>\n';
+      };
+
+      renderer.paragraph = function(text) {
+        if (text.trim().match(/^\[toc\]$/i)) {
+          return '<p class="markdown-toc"></p>'
+        } else {
+          return '<p>' + text + '</p>';
+        }
+      }
+      marked.setOptions({
+        renderer: renderer,
+        gfm: true,
+        tables: true,
+        breaks: true,
+        pedantic: false,
+        sanitize: false,
+        smartLists: true,
+        smartypants: false,
+        highlight: function(code, language) {
+          return hljs.highlightAuto(code, [language]).value;
+        }
+      });
 
       let editorDOM = document.getElementById('editor');
-      let _this = this;
+
       this.cm = CodeMirror.fromTextArea(editorDOM, {
         mode: 'markdown',
         lineNumbers: true,
@@ -344,10 +423,10 @@ export default {
 
       // 粘贴截图
       this.cm.on('paste', function(cm, changeObject) {
-        console.log(changeObject.clipboardData);
+        // console.log(changeObject.clipboardData);
         let items = changeObject.clipboardData.items;
-        console.log(items);
-        console.log(changeObject.clipboardData.types);
+        // console.log(items);
+        // console.log(changeObject.clipboardData.types);
         let clipboardData = changeObject.clipboardData;
         if (clipboardData) {
           let items = clipboardData.items;
@@ -365,12 +444,12 @@ export default {
           }
 
           if (item && item.kind == 'file' && item.type.match(/^image\//i)) {
-            console.log(item.getAsFile());
+            // console.log(item.getAsFile());
             let imgFile = item.getAsFile();
             let fileType = item.type.replace(/^image\/(.*)/i, '$1')
             let guid = new Date().getTime();
             // let guid = [time.getFullYear(),(time.getMonth()+1),time.getDate(),time.getHours(),time.getMinutes(),time.getSeconds()].join('_')
-            console.log(guid);
+            // console.log(guid);
             let fileName = 'ScreenShot' + guid + '.' + fileType;
             let reader = new FileReader();
             reader.readAsDataURL(imgFile);
@@ -486,39 +565,9 @@ export default {
       // let lineH = lingHandle.height();
 
       let mode = this.cm.getMode();
-      console.log(mode);
+      // console.log(mode);
     },
-    created: function() {
-      hljs.configure({
-        tabReplace: '  ' // 2 spaces
-      })
 
-      let renderer = new marked.Renderer();
-      renderer.listitem = function(text) {
-        if (/^\s*\[[x ]\]\s*/.test(text)) {
-          text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
-            .replace(/^\s*\[x\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled /> ");
-
-          return '<li style="list-style: none">' + text + '</li>';
-        } else {
-          return '<li>' + text + '</li>';
-        }
-      };
-      marked.setOptions({
-        renderer: renderer,
-        gfm: true,
-        tables: true,
-        breaks: true,
-        pedantic: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: false,
-        highlight: function(code, language) {
-          return hljs.highlightAuto(code, [language]).value;
-        }
-      });
-
-    }
 }
 </script>
 <style scoped>

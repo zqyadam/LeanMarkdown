@@ -22,7 +22,8 @@ Vue.config.debug = true
 
 const router = new Router({
   scrollBehavior: () => ({ y: 0 }),
-  routes
+  routes,
+  mode: 'history'
 })
 
 router.beforeEach((to, form, next) => {
