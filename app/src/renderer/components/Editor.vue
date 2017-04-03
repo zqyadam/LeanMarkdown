@@ -175,20 +175,9 @@ export default {
         // renderTimeSum = 0;
         // renderCount = 0
         /* debug calculating rendering time end */
-        // console.log(Content);
-        console.log(JSON.stringify(this.toc));
-
-        
-        // let tocHTML = '\n<ul>';
-        // let level1 = [];
-        // this.toc.forEach(function (item) {
-        //     tocHTML += '<li><a href="#'+item.id+'">'+item.text+'<a></li>\n';
-        //   });
-        // tocHTML += '</ul>\n';
-          console.log(this.tocToTree(this.toc));
-        this.toc = [];
-        return Content;
-        // return Content.replace(/<p class="markdown-toc">(.*)<\/p>/gi,tocHTML)
+          let tocHTML = this.tocTreeToHtml(this.tocToTree(this.toc))
+          this.toc = [];
+          return  Content.replace(/<p class="markdown-toc">(.*)<\/p>/gi,tocHTML)
       },
     },
     methods: {
@@ -212,6 +201,19 @@ export default {
 
         return headlines;
       },
+      tocTreeToHtml:function(tree) {
+        let startLabel = "<ul>";
+        let endLabel = "</ul>";
+        let html = "";
+        for (let item of tree){
+          if (item.children) {
+            html+='<li><a href="#'+item.id+'">'+item.text+'<a>'+this.tocTreeToHtml(item.children)+'</li>\n';
+          }else{
+            html+='<li><a href="#'+item.id+'">'+item.text+'<a></li>\n'
+          }
+        }
+        return startLabel+html+endLabel;
+      },
       execuateCallback: function(name) {
         if (this.toolbarHandlers[name]) {
           this.toolbarHandlers[name](this.cm, this)
@@ -225,7 +227,6 @@ export default {
           }
         }
         return
-
       },
       hideDialog: function() {
         this.dialogInfo.show = false;
