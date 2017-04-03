@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src *; style-src * ; script-src * ;font-src * ; "> -->
     <title>adamarkdown</title>
     <% if (htmlWebpackPlugin.options.appModules) { %>
       <!-- Add `app/node_modules` to global paths so `require` works properly in development -->
@@ -9,9 +10,6 @@
         require('module').globalPaths.push('<%= htmlWebpackPlugin.options.appModules.replace(/\\/g, '\\\\') %>')
       </script>
     <% } %>
-    <!-- <link rel="stylesheet" href="//at.alicdn.com/t/font_pqc6xsn23iz77gb9.css"> -->
-    <!-- <link rel="stylesheet" href="//at.alicdn.com/t/font_9qvu1mkht8vq85mi.css"> -->
-    <!-- <script src="http://cdn1.lncld.net/static/js/2.1.2/av-min.js"></script> -->
   </head>
   <body>
     <div id="app"></div>

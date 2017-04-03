@@ -26,22 +26,22 @@ export const toolbarIconsClass = {
 export const toolbarIconTips = {
   'undo': '撤销(Ctrl+Z)',
   'redo': '重做',
-  'bold': '加粗',
-  'italic': '斜体',
-  'quote': '引用',
-  'h1': '标题1',
-  'h2': '标题2',
-  'h3': '标题3',
-  'h4': '标题4',
-  'h5': '标题5',
-  'h6': '标题6',
+  'bold': '加粗(Ctrl+B)',
+  'italic': '斜体(Ctrl+I)',
+  'quote': '引用(Ctrl+Q)',
+  'h1': '标题1(Ctrl+1)',
+  'h2': '标题2(Ctrl+2)',
+  'h3': '标题3(Ctrl+3)',
+  'h4': '标题4(Ctrl+4)',
+  'h5': '标题5(Ctrl+5)',
+  'h6': '标题6(Ctrl+6)',
   'ul': '无序列表',
   'ol': '有序列表',
-  'hr': '横线',
-  'link': '链接',
-  'image': '图像',
-  'inlineCode': '行内代码',
-  'blockCode': '代码块'
+  'hr': '横线(Ctrl+6)',
+  'link': '链接(Ctrl+L或Ctrl+Shift+L)',
+  'image': '图像(Ctrl+P)',
+  'inlineCode': '行内代码(Ctrl+K)',
+  'blockCode': '代码块(Ctrl+Shift+K)'
 }
 export const toolbarHandlers = {
   undo: function(cm) {

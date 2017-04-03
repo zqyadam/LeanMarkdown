@@ -1,6 +1,17 @@
 <template>
-  <div class="main">
+  <div class="main" v-loading="loading" :element-loading-text="loadingText">
+    <!-- toolbar -->
     <el-button-group class="dark" id="toolbar">
+      <el-tooltip effect="light" content="新建文档">
+        <el-button icon="z-file-o" size="small" class="dark" :plain="true" @click="newFile"></el-button>
+      </el-tooltip>
+      <el-tooltip effect="light" content="打开本地文件">
+        <el-button icon="z-folder-open-o" size="small" class="dark" :plain="true" @click="openLocalFile"></el-button>
+      </el-tooltip>
+      <el-tooltip effect="light" content="保存到本地">
+        <el-button icon="z-save1" size="small" class="dark" :plain="true" @click="saveLocalFile"></el-button>
+      </el-tooltip>
+      <span class="split"></span>
       <el-tooltip v-for="tool in toolbarIcons" effect="light" :content="toolbarIconTips[tool]?toolbarIconTips[tool]:tool" placement="bottom">
         <el-button :plain="true" :icon="toolbarIconsClass[tool]" size="small" @click="execuateCallback(tool)" class="dark"></el-button>
       </el-tooltip>
@@ -15,7 +26,8 @@
         <el-button icon="z-computer" size="small" class="dark" :plain="true" @click="readMode"></el-button>
       </el-tooltip>
     </el-button-group>
-    <div class="half" v-loading="loading" :element-loading-text="loadingText">
+    <!-- main -->
+    <div class="half">
       <section :style="{width:editWidth+'%'}" v-show="editShow">
         <div class="fit">
           <textarea id="editor"></textarea>
@@ -83,11 +95,114 @@ import 'codemirror/addon/edit/continuelist.js'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/markdown/markdown.js'
 // import _ from 'lodash'
-
-
+import NProgress from 'nprogress/nprogress.js'
+import 'nprogress/nprogress.css'
+console.log(NProgress);
 // import marked from '../js/markdownSettings.js'
 import marked from 'marked'
 import hljs from 'highlight.js'
+
+const {
+  dialog
+} = require('electron').remote;
+const fs = require('fs');
+// 新建文件
+// function newFile(cm, icon, cursor, selection) {
+//   console.log('creating a new file');
+//   NProgress.start()
+//   NProgress.set(0.2)
+//   let newFilePath = mdDialog.showSaveDialog('新建Markdown文件');
+//   if (!newFilePath) {
+//     NProgress.done();
+//     console.log('cancel new file creation');
+//     return
+//   }
+//   console.log(newFilePath);
+//   NProgress.set(0.4)
+//   fs.writeFileSync(newFilePath, '', 'utf8');
+//   currentFileInfo.filepath = newFilePath;
+//   NProgress.set(0.8)
+//   this.setMarkdown('');
+//   NProgress.done();
+//   console.log('new file created');
+// }
+// // 打开文件
+// function openFile(cm, icon, cursor, selection) {
+//   console.log('open file');
+//   NProgress.start()
+//   NProgress.set(0.2)
+//   let filePaths = mdDialog.showOpenDialog('打开Markdown文件')
+//   if (!filePaths) {
+//     NProgress.done();
+//     return
+//   }
+//   console.log(filePaths);
+//   NProgress.set(0.4)
+//   let fileContent = fs.readFileSync(filePaths[0], 'utf8');
+//   NProgress.set(0.6)
+//   this.setMarkdown(fileContent);
+//   NProgress.set(0.8)
+//   currentFileInfo.filepath = filePaths[0];
+//   NProgress.done();
+// }
+// // 保存文件
+// function saveFile(cm, icon, cursor, selection) {
+//   console.log('saving file');
+//   NProgress.start()
+//   NProgress.set(0.2)
+
+//   if (!currentFileInfo.filepath) {
+
+//     let saveFilePath = mdDialog.showSaveDialog('保存Markdown文件');
+//     if (!saveFilePath) {
+//       NProgress.done();
+//       return
+//     }
+//     currentFileInfo.filepath = saveFilePath;
+//   }
+
+//   NProgress.set(0.4)
+//   let fileContent = this.getMarkdown();
+//   NProgress.set(0.6)
+//   fs.writeFileSync(currentFileInfo.filepath, fileContent, 'utf8');
+//   NProgress.set(0.8)
+//   this.save();
+//   NProgress.done();
+// }
+
+// mdDialog = {
+//   showSaveDialog: function(title) {
+//     let saveFilePath = dialog.showSaveDialog({
+//       title: title,
+//       filters: [{
+//         name: 'Makrdown',
+//         extensions: ['md', 'txt'],
+//       }, {
+//         name: '所有文件',
+//         extensions: ['*']
+//       }]
+//     })
+//     return saveFilePath ? saveFilePath : '';
+//   },
+//   showOpenDialog: function(title) {
+//     let filePaths = dialog.showOpenDialog({
+//       title: '打开Markdown文件',
+//       filters: [{
+//         name: 'Makrdown',
+//         extensions: ['md', 'txt'],
+//       }, {
+//         name: '所有文件',
+//         extensions: ['*']
+//       }],
+//       properties: ['openFile']
+//     })
+//     return filePaths ? filePaths : '';
+//   }
+// }
+
+
+
+
 
 /* debug define rendering time varaible */
 // var renderTimeSum = 0;
@@ -145,6 +260,7 @@ export default {
         editWidth: 50,
         readWidth: 50,
         toc: [],
+        currentFileInfo: {}
         // tools: [{ //
         //   name: 'fontLarge',
         //   icon: 'z-fangda',
@@ -175,9 +291,9 @@ export default {
         // renderTimeSum = 0;
         // renderCount = 0
         /* debug calculating rendering time end */
-          let tocHTML = this.tocTreeToHtml(this.tocToTree(this.toc))
-          this.toc = [];
-          return  Content.replace(/<p class="markdown-toc">(.*)<\/p>/gi,tocHTML)
+        let tocHTML = this.tocTreeToHtml(this.tocToTree(this.toc))
+        this.toc = [];
+        return Content.replace(/<p class="markdown-toc">(.*)<\/p>/gi, tocHTML)
       },
     },
     methods: {
@@ -201,18 +317,18 @@ export default {
 
         return headlines;
       },
-      tocTreeToHtml:function(tree) {
+      tocTreeToHtml: function(tree) {
         let startLabel = "<ul>";
         let endLabel = "</ul>";
         let html = "";
-        for (let item of tree){
+        for (let item of tree) {
           if (item.children) {
-            html+='<li><a href="#'+item.id+'">'+item.text+'<a>'+this.tocTreeToHtml(item.children)+'</li>\n';
-          }else{
-            html+='<li><a href="#'+item.id+'">'+item.text+'<a></li>\n'
+            html += '<li><a href="#' + item.id + '">' + item.text + '<a>' + this.tocTreeToHtml(item.children) + '</li>\n';
+          } else {
+            html += '<li><a href="#' + item.id + '">' + item.text + '<a></li>\n'
           }
         }
-        return startLabel+html+endLabel;
+        return startLabel + html + endLabel;
       },
       execuateCallback: function(name) {
         if (this.toolbarHandlers[name]) {
@@ -291,7 +407,70 @@ export default {
         this.editShow = false;
         this.readWidth = 100;
       },
-
+      showSaveDialog: function(title) {
+        let saveFilePath = dialog.showSaveDialog({
+          title: title,
+          filters: [{
+            name: 'Makrdown',
+            extensions: ['md', 'txt'],
+          }, {
+            name: '所有文件',
+            extensions: ['*']
+          }]
+        })
+        return saveFilePath ? saveFilePath : '';
+      },
+      showOpenDialog: function(title) {
+        let filePaths = dialog.showOpenDialog({
+          title: '打开Markdown文件',
+          filters: [{
+            name: 'Makrdown',
+            extensions: ['md', 'txt'],
+          }, {
+            name: '所有文件',
+            extensions: ['*']
+          }],
+          properties: ['openFile']
+        })
+        return filePaths ? filePaths : '';
+      },
+      newFile: function() {
+        this.cm.setValue('')
+      },
+      openLocalFile: function() {
+        NProgress.start()
+        NProgress.set(0.2)
+        let filePaths = this.showOpenDialog('打开Markdown文件')
+        if (!filePaths) {
+          NProgress.done();
+          return
+        }
+        NProgress.set(0.4)
+        let fileContent = fs.readFileSync(filePaths[0], 'utf8');
+        NProgress.set(0.6)
+        this.cm.setValue(fileContent);
+        NProgress.set(0.8)
+        this.currentFileInfo.filepath = filePaths[0];
+        NProgress.done();
+      },
+      // 保存文件
+      saveLocalFile: function() {
+        NProgress.start()
+        NProgress.set(0.2)
+        if (!this.currentFileInfo.filepath) {
+          let saveFilePath = this.showSaveDialog('保存Markdown文件');
+          if (!saveFilePath) {
+            NProgress.done();
+            return
+          }
+          this.currentFileInfo.filepath = saveFilePath;
+        }
+        NProgress.set(0.4)
+        let fileContent = this.cm.getValue();
+        NProgress.set(0.6)
+        fs.writeFileSync(this.currentFileInfo.filepath, fileContent, 'utf8');
+        NProgress.done();
+      }
     },
     mounted: function() {
       let _this = this;
@@ -510,49 +689,58 @@ export default {
       this.cm.setOption('extraKeys', {
         'Enter': "newlineAndIndentContinueMarkdownList",
         'Ctrl-B': () => {
-          this.execuateCallback('bold')
+          this.execuateCallback('bold');
         },
         'Ctrl-I': () => {
-          this.execuateCallback('italic')
+          this.execuateCallback('italic');
         },
         'Ctrl-Q': () => {
-          this.execuateCallback('quote')
+          this.execuateCallback('quote');
         },
         'Ctrl-1': () => {
-          this.execuateCallback('h1')
+          this.execuateCallback('h1');
         },
         'Ctrl-2': () => {
-          this.execuateCallback('h2')
+          this.execuateCallback('h2');
         },
         'Ctrl-3': () => {
-          this.execuateCallback('h3')
+          this.execuateCallback('h3');
         },
         'Ctrl-4': () => {
-          this.execuateCallback('h4')
+          this.execuateCallback('h4');
         },
         'Ctrl-5': () => {
-          this.execuateCallback('h5')
+          this.execuateCallback('h5');
         },
         'Ctrl-6': () => {
-          this.execuateCallback('h6')
+          this.execuateCallback('h6');
         },
         'Ctrl-L': () => {
-          this.execuateCallback('link')
+          this.execuateCallback('link');
         },
         'Shift-Ctrl-L': () => {
-          this.execuateCallback('linkWithoutDialog')
+          this.execuateCallback('linkWithoutDialog');
         },
         'Ctrl-T': () => {
-          this.execuateCallback('t')
+          this.execuateCallback('t');
         },
         'Ctrl-P': () => {
-          this.execuateCallback('image')
+          this.execuateCallback('image');
         },
         'Ctrl-K': () => {
-          this.execuateCallback('inlineCode')
+          this.execuateCallback('inlineCode');
         },
-        'Shift-Ctrl-B': () => {
-          this.execuateCallback('blockCode')
+        'Shift-Ctrl-K': () => {
+          this.execuateCallback('blockCode');
+        },
+        'Ctrl-N': () => {
+          this.newFile();
+        },
+        'Ctrl-O': () => {
+          this.openLocalFile();
+        },
+        'Ctrl-S': () => {
+          this.saveLocalFile();
         },
         'Shift-Ctrl-1': this.unh1,
       })
@@ -577,7 +765,8 @@ export default {
   border: none;
   display: flex;
   flex-direction: column;
-  background-color: rgb(249, 249, 245);
+  /*background-color: rgb(249, 249, 245);*/
+  background-color: rgb(242, 242, 242);
 }
 
 .half {
