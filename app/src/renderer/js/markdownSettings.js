@@ -1,15 +1,16 @@
 import marked from 'marked'
-import hljs from 'highlight.js'
+import Prism from 'prismjs/prism.js'
+
+import 'prismjs/plugins/line-numbers/prism-line-numbers.js'
+import 'prismjs/plugins/highlight-keywords/prism-highlight-keywords.min.js'
 
 
-// console.log(hljs.listLanguages());
-hljs.configure({
-  tabReplace: '  ' // 2 spaces
-})
+console.log(Prism);
 
 let renderer = new marked.Renderer();
 
 marked.toc = [];
+
 renderer.listitem = function(text) {
   if (/^\s*\[[x ]\]\s*/.test(text)) {
     text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
@@ -33,7 +34,7 @@ renderer.heading = function(text, level) {
 
 renderer.paragraph = function(text) {
   if (text.trim().match(/^\[toc\]$/i)) {
-    return '<p class="markdown-toc"></p>'
+    return '<p class="markdown-toc">' + text + '</p>'
   } else {
     return '<p>' + text + '</p>';
   }
@@ -41,24 +42,29 @@ renderer.paragraph = function(text) {
 
 renderer.link = function(href, title, text) {
 
-  return '<a class="link" href="'+href+'"'+ (title?'title="'+title+'"': '') + '>'+text+'</a>'
+  return '<a class="link" href="' + href + '"' + (title ? 'title="' + title + '"' : '') + '>' + text + '</a>'
 }
 
-// renderer.code = function(code, language) {
-//   let time1 = new Date().getTime();
-//   let codeContent = hljs.highlightAuto(code).value;
-//   let lines = codeContent.split('\n').length;
-//   let nums = [];
-//   for (var i = 0; i < lines; i++) {
-//     nums.push('<li>' + (i + 1) + '</li>');
-//   }
-//   nums = '<ul class="pre-numbering">' + nums.join('');
-//   nums += '</ul>';
-//   codeContent = nums + codeContent;
-//   let time2 = new Date().getTime();
-//   // console.log('code render use time:' + (time2 - time1));
-//   return '<pre><code class="lang-' + language + ' hljs has-numbering">' + codeContent + '</code></pre>';
-// }
+renderer.code = function(code, lang, escaped) {
+  // console.log(code);
+  // return
+  let lineNumbers = this.options.lineNumbers;
+  if (this.options.highlight) {
+    let out = this.options.highlight(code, lang);
+    
+    if (out != null && out !== code) {
+      escaped = true;
+      code = out;
+    }
+  }
+  if (!lang) {
+    return '<pre' + (lineNumbers ? ' class="line-numbers"' : '') + '><code>' + (escaped ? code : escape(code, true)) + '\n</code></pre>';
+  }
+
+  return '<pre class="' + this.options.langPrefix + escape(lang, true) + (lineNumbers?' line-numbers':'')+'"><code class="' + this.options.langPrefix + escape(lang, true) + '">' + (escaped ? code : escape(code, true)) + '\n</code></pre>\n';
+}
+
+
 marked.setOptions({
   renderer: renderer,
   gfm: true,
@@ -68,9 +74,21 @@ marked.setOptions({
   sanitize: false,
   smartLists: true,
   smartypants: false,
-  highlight: function(code, language) {
-    return hljs.highlightAuto(code, [language]).value;
-  }
+  langPrefix: 'language-',
+  lineNumbers: true,
+  // highlight:function(code, language) {
+  //   return 
+  // }
 });
+
+function escape(html, encode) {
+  return html
+    .replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 
 export default marked

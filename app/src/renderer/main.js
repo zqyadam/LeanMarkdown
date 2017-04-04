@@ -13,6 +13,9 @@ import routes from './routes'
 import {isLoggedIn} from './js/api'
 
 import './icons/iconfont.css'
+import 'prismjs/plugins/line-numbers/prism-line-numbers.js'
+import 'prismjs/plugins/highlight-keywords/prism-highlight-keywords.min.js'
+
 
 Vue.use(Electron)
   // Vue.use(Resource)

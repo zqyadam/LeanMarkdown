@@ -73,8 +73,8 @@ import {
   requestImageUploadFromStream,
   requestImageUploadFromLocal
 } from '../js/api.js'
-import 'github-markdown-css/github-markdown.css'
-import 'highlight.js/styles/monokai-sublime.css'
+
+// import 'highlight.js/styles/monokai-sublime.css'
 
 // import Toolbar from './Editor/Toolbar'
 import {
@@ -100,7 +100,10 @@ import 'nprogress/nprogress.css'
 
 import marked from '../js/markdownSettings.js'
 // import marked from 'marked'
-// import hljs from 'highlight.js'
+import 'github-markdown-css/github-markdown.css'
+// hightlilght
+import 'prismjs/themes/prism-okaidia.css'
+import 'prismjs/plugins/line-numbers/prism-line-numbers.css'
 
 const {
   dialog
@@ -193,6 +196,7 @@ export default {
       HTMLContent: function() {
         marked.toc = [];
         let Content = marked(this.MdContent);
+        // Content = Prism.highlightAll()
         /* debug calculating rendering time */
         // let average = renderTimeSum / renderCount;
         // console.log('average code render time :' + average);
@@ -210,6 +214,7 @@ export default {
         let _this = this;
         this.$nextTick(function() {
           // DOM 更新了
+          Prism.highlightAll()
           _this.addATagLinkEvents();
         })
       }
