@@ -94,114 +94,21 @@ import 'codemirror/addon/edit/continuelist.js'
 // import 'codemirror/addon/dialog/dialog.js'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/markdown/markdown.js'
-// import _ from 'lodash'
+//  nprogress 
 import NProgress from 'nprogress/nprogress.js'
 import 'nprogress/nprogress.css'
-console.log(NProgress);
-// import marked from '../js/markdownSettings.js'
-import marked from 'marked'
-import hljs from 'highlight.js'
+
+import marked from '../js/markdownSettings.js'
+// import marked from 'marked'
+// import hljs from 'highlight.js'
 
 const {
   dialog
 } = require('electron').remote;
 const fs = require('fs');
-// 新建文件
-// function newFile(cm, icon, cursor, selection) {
-//   console.log('creating a new file');
-//   NProgress.start()
-//   NProgress.set(0.2)
-//   let newFilePath = mdDialog.showSaveDialog('新建Markdown文件');
-//   if (!newFilePath) {
-//     NProgress.done();
-//     console.log('cancel new file creation');
-//     return
-//   }
-//   console.log(newFilePath);
-//   NProgress.set(0.4)
-//   fs.writeFileSync(newFilePath, '', 'utf8');
-//   currentFileInfo.filepath = newFilePath;
-//   NProgress.set(0.8)
-//   this.setMarkdown('');
-//   NProgress.done();
-//   console.log('new file created');
-// }
-// // 打开文件
-// function openFile(cm, icon, cursor, selection) {
-//   console.log('open file');
-//   NProgress.start()
-//   NProgress.set(0.2)
-//   let filePaths = mdDialog.showOpenDialog('打开Markdown文件')
-//   if (!filePaths) {
-//     NProgress.done();
-//     return
-//   }
-//   console.log(filePaths);
-//   NProgress.set(0.4)
-//   let fileContent = fs.readFileSync(filePaths[0], 'utf8');
-//   NProgress.set(0.6)
-//   this.setMarkdown(fileContent);
-//   NProgress.set(0.8)
-//   currentFileInfo.filepath = filePaths[0];
-//   NProgress.done();
-// }
-// // 保存文件
-// function saveFile(cm, icon, cursor, selection) {
-//   console.log('saving file');
-//   NProgress.start()
-//   NProgress.set(0.2)
-
-//   if (!currentFileInfo.filepath) {
-
-//     let saveFilePath = mdDialog.showSaveDialog('保存Markdown文件');
-//     if (!saveFilePath) {
-//       NProgress.done();
-//       return
-//     }
-//     currentFileInfo.filepath = saveFilePath;
-//   }
-
-//   NProgress.set(0.4)
-//   let fileContent = this.getMarkdown();
-//   NProgress.set(0.6)
-//   fs.writeFileSync(currentFileInfo.filepath, fileContent, 'utf8');
-//   NProgress.set(0.8)
-//   this.save();
-//   NProgress.done();
-// }
-
-// mdDialog = {
-//   showSaveDialog: function(title) {
-//     let saveFilePath = dialog.showSaveDialog({
-//       title: title,
-//       filters: [{
-//         name: 'Makrdown',
-//         extensions: ['md', 'txt'],
-//       }, {
-//         name: '所有文件',
-//         extensions: ['*']
-//       }]
-//     })
-//     return saveFilePath ? saveFilePath : '';
-//   },
-//   showOpenDialog: function(title) {
-//     let filePaths = dialog.showOpenDialog({
-//       title: '打开Markdown文件',
-//       filters: [{
-//         name: 'Makrdown',
-//         extensions: ['md', 'txt'],
-//       }, {
-//         name: '所有文件',
-//         extensions: ['*']
-//       }],
-//       properties: ['openFile']
-//     })
-//     return filePaths ? filePaths : '';
-//   }
-// }
-
-
-
+const {
+  shell
+} = require('electron');
 
 
 /* debug define rendering time varaible */
@@ -284,6 +191,7 @@ export default {
     },
     computed: {
       HTMLContent: function() {
+        marked.toc = [];
         let Content = marked(this.MdContent);
         /* debug calculating rendering time */
         // let average = renderTimeSum / renderCount;
@@ -291,10 +199,20 @@ export default {
         // renderTimeSum = 0;
         // renderCount = 0
         /* debug calculating rendering time end */
-        let tocHTML = this.tocTreeToHtml(this.tocToTree(this.toc))
+        let tocHTML = this.tocTreeToHtml(this.tocToTree(marked.toc))
         this.toc = [];
         return Content.replace(/<p class="markdown-toc">(.*)<\/p>/gi, tocHTML)
       },
+    },
+    watch: {
+      HTMLContent: function() {
+        console.log('HTMLContent changed');
+        let _this = this;
+        this.$nextTick(function() {
+          // DOM 更新了
+          _this.addATagLinkEvents();
+        })
+      }
     },
     methods: {
       tocToTree: function(toc) {
@@ -329,6 +247,16 @@ export default {
           }
         }
         return startLabel + html + endLabel;
+      },
+      addATagLinkEvents: function() {
+        let aNodes = document.querySelectorAll('#HTMLContent a.link');
+        for (var i = 0; i < aNodes.length; i++) {
+          let a = aNodes[i];
+          a.onclick = function() {
+            shell.openExternal(a.href);
+            return false;
+          }
+        }
       },
       execuateCallback: function(name) {
         if (this.toolbarHandlers[name]) {
@@ -436,6 +364,7 @@ export default {
       },
       newFile: function() {
         this.cm.setValue('')
+        this.cm.clearHistory();
       },
       openLocalFile: function() {
         NProgress.start()
@@ -475,53 +404,53 @@ export default {
     mounted: function() {
       let _this = this;
 
-      hljs.configure({
-        tabReplace: '  ' // 2 spaces
-      })
+      // hljs.configure({
+      //   tabReplace: '  ' // 2 spaces
+      // })
 
       let renderer = new marked.Renderer();
-      renderer.listitem = function(text) {
-        if (/^\s*\[[x ]\]\s*/.test(text)) {
-          text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
-            .replace(/^\s*\[x\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled /> ");
+      // renderer.listitem = function(text) {
+      //   if (/^\s*\[[x ]\]\s*/.test(text)) {
+      //     text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
+      //       .replace(/^\s*\[x\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled /> ");
 
-          return '<li style="list-style: none">' + text + '</li>';
-        } else {
-          return '<li>' + text + '</li>';
-        }
-      };
-      renderer.heading = function(text, level) {
-        var isChinese = /[\u4e00-\u9fa5]+$/.test(text);
-        var id = (isChinese) ? escape(text).replace(/\%/g, "") : text.toLowerCase().replace(/[^\w]+/g, "-");
+      //     return '<li style="list-style: none">' + text + '</li>';
+      //   } else {
+      //     return '<li>' + text + '</li>';
+      //   }
+      // };
+      // renderer.heading = function(text, level) {
+      //   var isChinese = /[\u4e00-\u9fa5]+$/.test(text);
+      //   var id = (isChinese) ? escape(text).replace(/\%/g, "") : text.toLowerCase().replace(/[^\w]+/g, "-");
 
-        _this.toc.push({
-          level: level,
-          id: id,
-          text: text
-        });
-        return '<h' + level + ' id="' + id + '">' + text + '</h' + level + '>\n';
-      };
+      //   _this.toc.push({
+      //     level: level,
+      //     id: id,
+      //     text: text
+      //   });
+      //   return '<h' + level + ' id="' + id + '">' + text + '</h' + level + '>\n';
+      // };
 
-      renderer.paragraph = function(text) {
-        if (text.trim().match(/^\[toc\]$/i)) {
-          return '<p class="markdown-toc"></p>'
-        } else {
-          return '<p>' + text + '</p>';
-        }
-      }
-      marked.setOptions({
-        renderer: renderer,
-        gfm: true,
-        tables: true,
-        breaks: true,
-        pedantic: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: false,
-        highlight: function(code, language) {
-          return hljs.highlightAuto(code, [language]).value;
-        }
-      });
+      // renderer.paragraph = function(text) {
+      //   if (text.trim().match(/^\[toc\]$/i)) {
+      //     return '<p class="markdown-toc"></p>'
+      //   } else {
+      //     return '<p>' + text + '</p>';
+      //   }
+      // }
+      // marked.setOptions({
+      //   renderer: renderer,
+      //   gfm: true,
+      //   tables: true,
+      //   breaks: true,
+      //   pedantic: false,
+      //   sanitize: false,
+      //   smartLists: true,
+      //   smartypants: false,
+      //   highlight: function(code, language) {
+      //     return hljs.highlightAuto(code, [language]).value;
+      //   }
+      // });
 
       let editorDOM = document.getElementById('editor');
 
@@ -793,6 +722,7 @@ export default {
   display: flex;
   flex-direction: row;
   line-height: 1;
+  /*flex-wrap: wrap;*/
 }
 
 .dark {
