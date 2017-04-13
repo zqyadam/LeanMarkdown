@@ -32,6 +32,10 @@ export let isLoggedIn = function() {
 export let requestImageUploadFromLocal = function(fileObj) {
   console.log('uploading image');
   let file = new AV.File(fileObj.name, fileObj);
+  let acl = new AV.ACL();
+  acl.setPublicReadAccess(true);
+  acl.setWriteAccess(AV.User.current(), true);
+  file.setACL(acl)
   return file;
 }
 
@@ -40,5 +44,9 @@ export let requestImageUploadFromStream = function(fileName, fileStream) {
   console.log('uploading image from stream');
   let data = { base64: fileStream };
   let file = new AV.File(fileName, data);
+  let acl = new AV.ACL();
+  acl.setPublicReadAccess(true);
+  acl.setWriteAccess(AV.User.current(), true);
+  file.setACL(acl)
   return file
 }

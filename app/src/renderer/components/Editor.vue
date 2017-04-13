@@ -25,9 +25,12 @@
       <el-tooltip effect="light" content="阅读模式">
         <el-button icon="z-computer" size="small" class="dark" :plain="true" @click="readMode"></el-button>
       </el-tooltip>
+      <el-tooltip effect="light" content="左右交换">
+        <el-button icon="z-exchange" size="small" class="dark" :plain="true" @click="changeLayoutDirection"></el-button>
+      </el-tooltip>
     </el-button-group>
     <!-- main -->
-    <div class="half">
+    <div class="half" :class="layoutDirection?'direction':'reverse'">
       <section :style="{width:editWidth+'%'}" v-show="editShow">
         <div class="fit">
           <textarea id="editor"></textarea>
@@ -64,7 +67,7 @@
 </template>
 <script>
 /* fake data */
-import fakeData from '../fake/data.js'
+// import fakeData from '../fake/data.js'
 // fake data end 
 
 
@@ -102,8 +105,19 @@ import marked from '../js/markdownSettings.js'
 // import marked from 'marked'
 import 'github-markdown-css/github-markdown.css'
 // hightlilght
+import Prism from 'prismjs/prism.js'
+import 'prismjs/plugins/line-numbers/prism-line-numbers.js'
+import 'prismjs/plugins/highlight-keywords/prism-highlight-keywords.min.js'
+import 'prismjs/plugins/toolbar/prism-toolbar.min.js'
+import 'prismjs/plugins/show-language/prism-show-language.min.js'
+import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js'
+// import 'prismjs/plugins/autoloader/prism-autoloader.min.js'
+
 import 'prismjs/themes/prism-okaidia.css'
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css'
+import 'prismjs/plugins/toolbar/prism-toolbar.css'
+
+// Prism.plugins.autoloader.languages_path = '../node_modules/prismjs/components/';
 
 const {
   dialog
@@ -170,26 +184,27 @@ export default {
         editWidth: 50,
         readWidth: 50,
         toc: [],
-        currentFileInfo: {}
-        // tools: [{ //
-        //   name: 'fontLarge',
-        //   icon: 'z-fangda',
-        //   tip: '放大字体',
-        //   callback: function() {}
-        // }, { //
-        //   name: 'fontSmall',
-        //   icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
-        //   tip: '缩小字体',
-        //   callback: function() {}
-        // }, {
-        //   name: 'logout',
-        //   icon: 'z-logout',
-        //   tip: '退出',
-        //   callback: function() {
-        //     requestLogout()
-        //     console.log(this);
-        //   }
-        // }]
+        currentFileInfo: {},
+        layoutDirection: true
+          // tools: [{ //
+          //   name: 'fontLarge',
+          //   icon: 'z-fangda',
+          //   tip: '放大字体',
+          //   callback: function() {}
+          // }, { //
+          //   name: 'fontSmall',
+          //   icon: 'z-iconfontsuoxiao', //el-icon-z-iconfontsuoxiao
+          //   tip: '缩小字体',
+          //   callback: function() {}
+          // }, {
+          //   name: 'logout',
+          //   icon: 'z-logout',
+          //   tip: '退出',
+          //   callback: function() {
+          //     requestLogout()
+          //     console.log(this);
+          //   }
+          // }]
       }
     },
     computed: {
@@ -340,6 +355,9 @@ export default {
         this.editShow = false;
         this.readWidth = 100;
       },
+      changeLayoutDirection: function() {
+        this.layoutDirection = !this.layoutDirection;
+      },
       showSaveDialog: function(title) {
         let saveFilePath = dialog.showSaveDialog({
           title: title,
@@ -386,6 +404,11 @@ export default {
         NProgress.set(0.8)
         this.currentFileInfo.filepath = filePaths[0];
         NProgress.done();
+        this.$message({
+          message: '打开本地文件成功',
+          type: 'success',
+          showClose: true
+        });
       },
       // 保存文件
       saveLocalFile: function() {
@@ -395,6 +418,10 @@ export default {
           let saveFilePath = this.showSaveDialog('保存Markdown文件');
           if (!saveFilePath) {
             NProgress.done();
+            this.$message({
+              message: '取消本地文件保存',
+              showClose: true
+            });
             return
           }
           this.currentFileInfo.filepath = saveFilePath;
@@ -404,6 +431,11 @@ export default {
         NProgress.set(0.6)
         fs.writeFileSync(this.currentFileInfo.filepath, fileContent, 'utf8');
         NProgress.done();
+        this.$message({
+          message: '保存本地文件成功',
+          type: 'success',
+          showClose: true
+        });
       }
     },
     mounted: function() {
@@ -489,48 +521,58 @@ export default {
       // drag and drop pictures
       this.cm.on('drop', function(cm, e) {
         e.preventDefault()
-
         let file = e.dataTransfer.files[0];
-        let imageType = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif']
 
-        console.log(imageType.indexOf(file.type));
-        if (imageType.indexOf(file.type) !== -1) {
-          _this.loading = true;
-          // let pos = cm.getCursor('start');
-          _this.loadingText = '准备开始上传...';
-          let filePromise = requestImageUploadFromLocal(file);
-          filePromise.save({
-            onprogress: function(e) {
-              // change progress
-              if (parseInt(e.percent) === 100) {
-                _this.loadingText = '即将上传完成... \\(^o^)/';
-              } else {
-                _this.loadingText = '拼命上传中，已上传' + parseInt(e.percent) + '%';
+        /* read text file */
+        if (/\.md$/i.test(file.name) || file.type === 'text/plain') {
+          console.log('reading  file');
+          let fileContent = fs.readFileSync(file.path, 'utf8');
+          _this.currentFileInfo.filepath = file.path;
+          _this.cm.setValue(fileContent);
+
+        } else if(/^image\//i.test(file.type)) {
+          // read and upload image
+          // let imageType = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif']
+
+          // console.log(imageType.indexOf(file.type));
+          // if (imageType.indexOf(file.type) !== -1) {
+            _this.loading = true;
+            // let pos = cm.getCursor('start');
+            _this.loadingText = '准备开始上传...';
+            let filePromise = requestImageUploadFromLocal(file);
+            filePromise.save({
+              onprogress: function(e) {
+                // change progress
+                if (parseInt(e.percent) === 100) {
+                  _this.loadingText = '即将上传完成... \\(^o^)/';
+                } else {
+                  _this.loadingText = '拼命上传中，已上传' + parseInt(e.percent) + '%';
+                }
               }
-            }
-          }).then(function(file) {
-            let url = file.url();
+            }).then(function(file) {
+              let url = file.url();
 
-            if (cm.somethingSelected()) {
-              let selection = cm.getSelection();
-              let mdImage = '![' + selection + '](' + url + ')';
-              cm.replaceSelection(mdImage);
+              if (cm.somethingSelected()) {
+                let selection = cm.getSelection();
+                let mdImage = '![' + selection + '](' + url + ')';
+                cm.replaceSelection(mdImage);
 
-            } else {
-              let mdImage = '![](' + url + ')';
-              let pos = cm.getCursor('start');
-              cm.replaceRange(mdImage, pos);
-              cm.setCursor({
-                line: pos.line,
-                ch: pos.ch + 2
-              });
-              cm.replaceSelection('图像描述', 'around');
-            }
+              } else {
+                let mdImage = '![](' + url + ')';
+                let pos = cm.getCursor('start');
+                cm.replaceRange(mdImage, pos);
+                cm.setCursor({
+                  line: pos.line,
+                  ch: pos.ch + 2
+                });
+                cm.replaceSelection('图像描述', 'around');
+              }
 
-            _this.loading = false;
-          }, function(err) {
-            _this.loading = false;
-          })
+              _this.loading = false;
+            }, function(err) {
+              _this.loading = false;
+            })
+          // }
         }
       })
 
@@ -680,8 +722,8 @@ export default {
       })
 
 
-      let defaultContent = fakeData
-      this.cm.setValue(defaultContent)
+      // let defaultContent = fakeData
+      // this.cm.setValue(defaultContent)
 
 
 
@@ -705,11 +747,18 @@ export default {
 
 .half {
   display: flex;
-  flex-direction: row;
   align-items: stretch;
   justify-content: center;
   height: 100%;
   width: 100%;
+}
+
+.direction {
+  flex-direction: row;
+}
+
+.reverse {
+  flex-direction: row-reverse;
 }
 
 .half-item {
@@ -811,6 +860,10 @@ export default {
   font-size: 18px;
   background-color: rgb(249, 249, 245);
   font-family: 'Consolas', '微软雅黑';
+}
+
+.CodeMirror-activeline-background {
+  background-color: rgb(241, 242, 239)
 }
 
 .avatar-uploader .el-upload {

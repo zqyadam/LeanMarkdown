@@ -1,11 +1,5 @@
 import marked from 'marked'
-import Prism from 'prismjs/prism.js'
 
-import 'prismjs/plugins/line-numbers/prism-line-numbers.js'
-import 'prismjs/plugins/highlight-keywords/prism-highlight-keywords.min.js'
-
-
-console.log(Prism);
 
 let renderer = new marked.Renderer();
 
