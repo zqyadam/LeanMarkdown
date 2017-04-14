@@ -69,10 +69,7 @@ marked.setOptions({
   smartLists: true,
   smartypants: false,
   langPrefix: 'language-',
-  lineNumbers: true,
-  // highlight:function(code, language) {
-  //   return 
-  // }
+  lineNumbers: true
 });
 
 function escape(html, encode) {

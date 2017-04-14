@@ -21,5 +21,6 @@ export default [{
   }
 }, {
   path: '*',
-  redirect: '/',
+  redirect: '/editor',
 }]
+

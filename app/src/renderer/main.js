@@ -1,12 +1,10 @@
 import Vue from 'vue'
 import Electron from 'vue-electron'
-// import Resource from 'vue-resource'
 import Router from 'vue-router'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
 
 
-// import './css/highlight_linenumber.css'
 
 import App from './App'
 import routes from './routes'
@@ -17,15 +15,13 @@ import './icons/iconfont.css'
 
 
 Vue.use(Electron)
-  // Vue.use(Resource)
 Vue.use(Router)
 Vue.use(ElementUI)
-Vue.config.debug = true
+Vue.config.debug = false
 
 const router = new Router({
   scrollBehavior: () => ({ y: 0 }),
-  routes,
-  mode: 'history'
+  routes
 })
 
 router.beforeEach((to, form, next) => {

@@ -149,7 +149,6 @@ export default {
   text-align: left;
   padding-left: 40px;
   margin-top: 5px;
-  /*border: 1px solid blue;*/
 }
 
 #fm-btns .btn-login {

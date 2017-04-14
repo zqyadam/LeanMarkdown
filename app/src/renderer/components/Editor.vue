@@ -77,9 +77,6 @@ import {
   requestImageUploadFromLocal
 } from '../js/api.js'
 
-// import 'highlight.js/styles/monokai-sublime.css'
-
-// import Toolbar from './Editor/Toolbar'
 import {
   toolbarIcons,
   toolbarIconsClass,
@@ -93,10 +90,9 @@ import 'codemirror/addon/selection/active-line.js'
 import 'codemirror/addon/edit/closebrackets.js'
 import 'codemirror/addon/edit/matchbrackets.js'
 import 'codemirror/addon/edit/continuelist.js'
-// import 'codemirror/addon/dialog/dialog.css'
-// import 'codemirror/addon/dialog/dialog.js'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/markdown/markdown.js'
+
 //  nprogress 
 import NProgress from 'nprogress/nprogress.js'
 import 'nprogress/nprogress.css'
@@ -111,13 +107,11 @@ import 'prismjs/plugins/highlight-keywords/prism-highlight-keywords.min.js'
 import 'prismjs/plugins/toolbar/prism-toolbar.min.js'
 import 'prismjs/plugins/show-language/prism-show-language.min.js'
 import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js'
-// import 'prismjs/plugins/autoloader/prism-autoloader.min.js'
 
 import 'prismjs/themes/prism-okaidia.css'
 import 'prismjs/plugins/line-numbers/prism-line-numbers.css'
 import 'prismjs/plugins/toolbar/prism-toolbar.css'
 
-// Prism.plugins.autoloader.languages_path = '../node_modules/prismjs/components/';
 
 const {
   dialog
@@ -126,39 +120,6 @@ const fs = require('fs');
 const {
   shell
 } = require('electron');
-
-
-/* debug define rendering time varaible */
-// var renderTimeSum = 0;
-// var renderCount = 0;
-/* debug define rendering time varaible end */
-
-
-// var renderer = new marked.Renderer();
-// // code renderer
-// renderer.code = function(code, language = 'javascript') {
-
-//   let time1 = new Date().getTime(); // start time
-
-//   let codeContent = hljs.highlightAuto(code, [language]).value;
-//   let lines = codeContent.split('\n').length;
-//   let nums = [];
-//   for (var i = 0; i < lines; i++) {
-//     nums.push('<li>' + (i + 1) + '</li>');
-//   }
-//   nums = '<ul class="pre-numbering">' + nums.join('');
-//   nums += '</ul>';
-//   codeContent = nums + codeContent;
-
-//   // let time2 = new Date().getTime(); // end time
-//   // renderTimeSum += (time2 - time1); // add time spent
-//   // renderCount++; // add count
-
-//   return '<pre><code class="lang-' + language + ' hljs has-numbering">' + codeContent + '</code></pre>';
-// }
-
-
-
 
 export default {
   data() {
@@ -441,53 +402,8 @@ export default {
     mounted: function() {
       let _this = this;
 
-      // hljs.configure({
-      //   tabReplace: '  ' // 2 spaces
-      // })
-
-      let renderer = new marked.Renderer();
-      // renderer.listitem = function(text) {
-      //   if (/^\s*\[[x ]\]\s*/.test(text)) {
-      //     text = text.replace(/^\s*\[\s\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" /> ")
-      //       .replace(/^\s*\[x\]\s*/, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled /> ");
-
-      //     return '<li style="list-style: none">' + text + '</li>';
-      //   } else {
-      //     return '<li>' + text + '</li>';
-      //   }
-      // };
-      // renderer.heading = function(text, level) {
-      //   var isChinese = /[\u4e00-\u9fa5]+$/.test(text);
-      //   var id = (isChinese) ? escape(text).replace(/\%/g, "") : text.toLowerCase().replace(/[^\w]+/g, "-");
-
-      //   _this.toc.push({
-      //     level: level,
-      //     id: id,
-      //     text: text
-      //   });
-      //   return '<h' + level + ' id="' + id + '">' + text + '</h' + level + '>\n';
-      // };
-
-      // renderer.paragraph = function(text) {
-      //   if (text.trim().match(/^\[toc\]$/i)) {
-      //     return '<p class="markdown-toc"></p>'
-      //   } else {
-      //     return '<p>' + text + '</p>';
-      //   }
-      // }
-      // marked.setOptions({
-      //   renderer: renderer,
-      //   gfm: true,
-      //   tables: true,
-      //   breaks: true,
-      //   pedantic: false,
-      //   sanitize: false,
-      //   smartLists: true,
-      //   smartypants: false,
-      //   highlight: function(code, language) {
-      //     return hljs.highlightAuto(code, [language]).value;
-      //   }
-      // });
+      // let renderer = new marked.Renderer();
+      
 
       let editorDOM = document.getElementById('editor');
 
@@ -524,7 +440,7 @@ export default {
         let file = e.dataTransfer.files[0];
 
         /* read text file */
-        if (/\.md$/i.test(file.name) || file.type === 'text/plain') {
+        if (/\.(md|txt)$/i.test(file.name)) {
           console.log('reading  file');
           let fileContent = fs.readFileSync(file.path, 'utf8');
           _this.currentFileInfo.filepath = file.path;
@@ -532,14 +448,10 @@ export default {
 
         } else if(/^image\//i.test(file.type)) {
           // read and upload image
-          // let imageType = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif']
-
-          // console.log(imageType.indexOf(file.type));
-          // if (imageType.indexOf(file.type) !== -1) {
             _this.loading = true;
-            // let pos = cm.getCursor('start');
             _this.loadingText = '准备开始上传...';
             let filePromise = requestImageUploadFromLocal(file);
+
             filePromise.save({
               onprogress: function(e) {
                 // change progress
@@ -572,17 +484,14 @@ export default {
             }, function(err) {
               _this.loading = false;
             })
-          // }
         }
       })
 
 
       // 粘贴截图
       this.cm.on('paste', function(cm, changeObject) {
-        // console.log(changeObject.clipboardData);
         let items = changeObject.clipboardData.items;
-        // console.log(items);
-        // console.log(changeObject.clipboardData.types);
+
         let clipboardData = changeObject.clipboardData;
         if (clipboardData) {
           let items = clipboardData.items;
