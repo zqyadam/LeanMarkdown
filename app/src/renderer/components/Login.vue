@@ -1,7 +1,7 @@
 <template>
   <div class="fit">
     <div id="container">
-      <img src="../images/MarkdownLogo.jpg" alt="">
+      <img src="../images/MarkdownLogo.jpg" alt="mdlogo">
       <div>
         <div id="fm-inputs">
           <!-- inputs -->
