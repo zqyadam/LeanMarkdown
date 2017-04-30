@@ -2,107 +2,49 @@
   <div class="fit">
     <div id="container">
       <img src="../images/MarkdownLogo.jpg" alt="mdlogo">
-      <div>
-        <div id="fm-inputs">
-          <!-- inputs -->
-          <label>
-            <el-input v-model="username" placeholder="请输入邮箱地址" type="email" @change="checkEmail">
-              <i class="el-icon-z-email" slot="prepend"></i>
-            </el-input>
-            <p v-if="!isEmail">请输入正确的邮箱格式</p>
-          </label>
-          <label>
-            <el-input v-model="password" placeholder="请输入密码" type="password" @change="checkPassword">
-              <i class="el-icon-z-password" slot="prepend"></i>
-            </el-input>
-            <p v-if="!isPasswordLengthEnough">密码长度至少6位</p>
-          </label>
-        </div>
-        <div id="fm-btns">
-          <!-- buttons -->
-          <el-button size="large" class="btn-login" @click="login">登录</el-button>
-          <p>
-            还没有账号？注册一个吧~
-            <el-button size="small" type="danger" :plain="true">立即注册</el-button>
-          </p>
-        </div>
-      </div>
+      <el-form :model="settings" label-width="80px" label-position="left" ref="settingForm">
+        <el-form-item label="App ID" prop="appId" :rules="[{required:true, message:'App ID不能为空'}]">
+          <el-input v-model="settings.appId" placeholder="请输入App ID" type="password">
+          </el-input>
+        </el-form-item>
+        <el-form-item label="App Key" prop="appKey" :rules="[{required:true, message:'App Key不能为空'}]">
+          <el-input v-model="settings.appKey" placeholder="请输入App Key" type="password">
+          </el-input>
+        </el-form-item>
+        <p>请输入LeanCloud应用的App ID及App Key</p>
+        <el-form-item>
+          <el-button @click="login" type="primary">确定</el-button>
+          <el-button @click="reset">重置</el-button>
+        </el-form-item>
+      </el-form>
     </div>
   </div>
 </template>
 <script>
-import {
-  requestLogin,
-  isLoggedIn
-} from '../js/api.js'
-import {
-  emailCheck
-} from '../js/common.js'
 export default {
   data() {
       return {
-        username: 'a@qq.com',
-        password: '111',
-        isEmail: true,
-        isPasswordLengthEnough: true
+        settings: {
+          appId: 'eNnoIjiE17xqBwsupO9t44dJ-gzGzoHsz',
+          appKey: '8dciLHBK67gGfwnsi6zDI1A2'
+        }
       }
     },
     methods: {
-      checkEmail: function() {
-        this.isEmail = emailCheck(this.username);
-      },
-      checkPassword: function() {
-        this.isPasswordLengthEnough = (this.password.length >= 3);
-      },
       login: function() {
-        // 输入验证
-        if (!(this.username && this.password && this.isEmail && this.isPasswordLengthEnough)) {
-          console.log('pass fail');
-          this.$message({
-            showClose: true,
-            message: '邮箱格式或密码长度没有验证通过哦！',
-            type: 'error'
-          });
-          return;
-        }
-
         let _this = this;
-        requestLogin(this.username, this.password).then(() => {
-          console.log('login success');
-          _this.$router.push({
-            name: 'editor'
-          })
-        }, (err) => {
-          console.log(err);
-          let errorLoginMsg
-          switch (err.code) {
-            case 211:
-              errorLoginMsg = "用户不存在，立即注册一个吧~";
-              _this.username = '';
-              _this.password = '';
-              break;
-            case 210:
-              errorLoginMsg = "用户名与密码不匹配，请重新输入密码。";
-              _this.password = '';
-              break;
-            default:
-              errorLoginMsg = "赶紧注册一个账号并开始使用吧~~";
-              break;
+        this.$refs.settingForm.validate(function(validate) {
+          console.log(_this.settings);
+          if (validate) {
+            localStorage.setItem('settings', JSON.stringify(_this.settings))
+            _this.$router.push({
+              name: 'editor'
+            })
           }
-          _this.$message({
-            showClose: true,
-            message: errorLoginMsg,
-            type: 'error'
-          });
         })
-
-      }
-    },
-    created: function() {
-      if (isLoggedIn()) {
-        this.$router.push({
-          name: 'editor'
-        })
+      },
+      reset: function() {
+        this.$refs['settingForm'].resetFields();
       }
     }
 }
@@ -132,31 +74,19 @@ export default {
   margin-bottom: 20px;
 }
 
-#fm-inputs {
+.el-form {
   margin: 0 auto;
   width: 300px;
 }
 
-#fm-inputs label {
-  display: block;
-  margin-bottom: 10px;
-}
-
-#fm-inputs p {
+.el-form p {
   font-size: 14px;
   font-family: "微软雅黑";
-  color: red;
-  text-align: left;
-  padding-left: 40px;
-  margin-top: 5px;
+  text-align: center;
+  margin: 15px auto;
 }
 
-#fm-btns .btn-login {
-  width: 300px;
-  margin-bottom: 10px;
-}
-
-#fm-btns p {
-  font-size: 12px;
+.el-form .el-button {
+  width: 100px;
 }
 </style>

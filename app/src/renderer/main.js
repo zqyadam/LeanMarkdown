@@ -8,7 +8,7 @@ import 'element-ui/lib/theme-default/index.css'
 
 import App from './App'
 import routes from './routes'
-import {isLoggedIn} from './js/api'
+import {initAV} from './js/api'
 
 import './icons/iconfont.css'
 
@@ -26,8 +26,13 @@ const router = new Router({
 
 router.beforeEach((to, form, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isLoggedIn()) {
+    let settings = JSON.parse(localStorage.getItem('settings'))
+    console.log(settings);
+    if (!settings) {
       next({ name: 'login' })
+    }else{
+      initAV(settings);
+      next();
     }
   }
   next();

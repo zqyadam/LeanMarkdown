@@ -6,13 +6,6 @@ export default [{
     requiresAuth: false
   }
 }, {
-  path: '/registe',
-  name: 'registe',
-  component: require('components/Registe'),
-  meta: {
-    requiresAuth: false
-  }
-}, {
   path: '/editor',
   name: 'editor',
   component: require('components/Editor'),
@@ -23,4 +16,3 @@ export default [{
   path: '*',
   redirect: '/editor',
 }]
-

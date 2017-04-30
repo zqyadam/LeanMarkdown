@@ -1,11 +1,15 @@
-import { requestImageUploadFromLocal } from './api.js'
+import { requestImageUploadFromLocal, createNewPost } from './api.js'
 
-export const toolbarIcons = ['undo', 'redo', 'bold', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image', 'inlineCode', 'blockCode'];
+export const toolbar = ['newFile', 'openFile', 'saveFile', 'split', 'undo', 'redo', 'bold', 'del', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image', 'table', 'inlineCode', 'blockCode', 'split', 'previewMode', 'editMode', 'readMode', 'exchange','help'];
 
 export const toolbarIconsClass = {
+  'newFile': 'z-file-o',
+  'openFile': 'z-folder-open-o',
+  'saveFile': 'z-save1',
   'undo': 'z-undo',
   'redo': 'z-redo',
   'bold': 'z-bold',
+  'del': 'z-shanchuxian',
   'italic': 'z-italic',
   'quote': 'z-yinyong',
   'h1': 'z-h',
@@ -19,14 +23,24 @@ export const toolbarIconsClass = {
   'hr': 'z-hengxian',
   'link': 'z-module-link',
   'image': 'z-tupian',
+  'table': 'z-table',
   'inlineCode': 'z-ai-code',
-  'blockCode': 'z-daimakuai'
+  'blockCode': 'z-daimakuai',
+  'previewMode': 'z-shuanglan',
+  'editMode': 'z-bianji',
+  'readMode': 'z-computer',
+  'exchange': 'z-exchange',
+  'help':'z-help'
 }
 
 export const toolbarIconTips = {
+  'newFile': '新建网络文章',
+  'openFile': '打开文章',
+  'saveFile': '保存文章',
   'undo': '撤销(Ctrl+Z)',
   'redo': '重做',
   'bold': '加粗(Ctrl+B)',
+  'del': '删除线',
   'italic': '斜体(Ctrl+I)',
   'quote': '引用(Ctrl+Q)',
   'h1': '标题1(Ctrl+1)',
@@ -35,15 +49,42 @@ export const toolbarIconTips = {
   'h4': '标题4(Ctrl+4)',
   'h5': '标题5(Ctrl+5)',
   'h6': '标题6(Ctrl+6)',
-  'ul': '无序列表',
-  'ol': '有序列表',
-  'hr': '横线(Ctrl+6)',
+  'ul': '无序列表(Ctrl+Shift+U)',
+  'ol': '有序列表(Ctrl+Shift+O)',
+  'hr': '横线(Ctrl+H)',
   'link': '链接(Ctrl+L或Ctrl+Shift+L)',
-  'image': '图像(Ctrl+P)',
+  'image': '图像(Ctrl+Shift+P)',
+  'table': '表格',
   'inlineCode': '行内代码(Ctrl+K)',
-  'blockCode': '代码块(Ctrl+Shift+K)'
+  'blockCode': '代码块(Ctrl+Shift+K)',
+  'previewMode': '实时预览',
+  'editMode': '编辑模式',
+  'readMode': '阅读模式',
+  'exchange': '左右交换',
+  'help':'使用帮助'
 }
 export const toolbarHandlers = {
+  newFile: function(cm, _this) {
+    askSave(_this, function() {
+      _this.cm.setValue('');
+      _this.cm.clearHistory();
+      _this.cm.markClean();
+      let pos = cm.getCursor();
+      _this.cm.replaceSelection('# \n\n');
+      _this.cm.setCursor({ line: pos.line, ch: pos.ch + 2 });
+      _this.cm.focus();
+      _this.webPost = {};
+    })
+  },
+  openFile: function(cm, _this) {
+    askSave(_this, function() {
+      console.log('显示打开文件对话框');
+      _this.openPostDialog = true;
+    })
+  },
+  saveFile: function(cm, _this) {
+    savePost(_this)
+  },
   undo: function(cm) {
     cm.undo();
   },
@@ -51,142 +92,71 @@ export const toolbarHandlers = {
     cm.redo()
   },
   bold: function(cm) {
-    Common.setWrapLabel(cm, '**')
+    Common.setWrapLabel(cm, '**');
+    cm.focus();
+  },
+  del:function(cm) {
+    Common.setWrapLabel(cm, '~~');
+    cm.focus();
   },
   italic: function(cm) {
     Common.setWrapLabel(cm, '*')
+    cm.focus();
   },
   quote: function(cm) {
     Common.setStartLabel(cm, '> ')
+    cm.focus();
   },
   h1: function(cm) {
     Common.setStartLabel(cm, '# ')
+    cm.focus();
   },
   h2: function(cm) {
     Common.setStartLabel(cm, '## ')
+    cm.focus();
   },
   h3: function(cm) {
     Common.setStartLabel(cm, '### ')
+    cm.focus();
   },
   h4: function(cm) {
     Common.setStartLabel(cm, '#### ')
+    cm.focus();
   },
   h5: function(cm) {
     Common.setStartLabel(cm, '##### ')
+    cm.focus();
   },
   h6: function(cm) {
     Common.setStartLabel(cm, '###### ')
+    cm.focus();
   },
   ul: function(cm) {
     Common.setStartLabel(cm, '- ')
+    cm.focus();
   },
   ol: function(cm) {
     Common.setStartLabel(cm, '1. ')
+    cm.focus();
   },
   hr: function(cm) {
     Common.insertLabel(cm, '\n\n------\n\n')
+    cm.focus();
   },
   link: function(cm, _this) {
-    let defaultText = ''
-    if (cm.somethingSelected()) {
-      defaultText = cm.getSelection();
-      // cm.replaceSelection('[' + selection + ']()')
-    }
-    // Common.insertLabel(cm, '[]()');
-    let dialog = {
-      show: true,
-      title: '插入链接',
-      formElements: [{
-        //Input、Select、Checkbox、Radio、Switch
-        label: '链接地址:',
-        type: 'input',
-        value: 'http://'
-      }, {
-        label: '链接内容',
-        type: 'input',
-        value: defaultText
-      }],
-      formButtons: [{
-        text: '取消',
-        type: 'text',
-        handler: function() {
-          _this.hideDialog();
-        }
-      }, {
-        text: '确定',
-        type: 'primary',
-        handler: function() {
-          let url = dialog.formElements[0].value;
-          let urlText = dialog.formElements[1].value;
-          let link = '[' + urlText + '](' + url + ')';
-          cm.replaceSelection(link)
-          _this.hideDialog();
-        }
-      }]
-    }
-    _this.showDialog(dialog);
+    _this.cm.setOption('readOnly', true)
+    _this.linkDialog = true;
   },
   image: function(cm, _this) {
-    let dialog = {
-      show: true,
-      title: '上传图像',
-      formElements: [{
-        type: 'file',
-        accept: 'image/jpeg, image/jpg, image/png, image/bmp',
-        handler: function(file) {
-          console.log('image this');
-          console.log(file);
-          let filePromise = requestImageUploadFromLocal(file);
-          // add progress 
-          // _this.$set(_this.dialogInfo, 'progress', 0)
-          _this.loading = true;
-          _this.loadingText = '准备开始上传...';
-          filePromise.save({
-            onprogress: function(e) {
-              // change progress
-              // _this.dialogInfo.progress = parseInt(e.percent);
-              if (parseInt(e.percent) === 100) {
-                _this.loadingText = '即将上传完成... \\(^o^)/';
-              } else {
-                _this.loadingText = '拼命上传中，已上传' + parseInt(e.percent) + '%';
-              }
-            }
-          }).then(function(file) {
-            console.log('uploaded file info');
-            console.log(file);
-
-            let url = file.url();
-
-            if (cm.somethingSelected()) {
-              let selection = cm.getSelection();
-              let mdImage = '![' + selection + '](' + url + ')';
-              cm.replaceSelection(mdImage);
-            } else {
-              let mdImage = '![](' + url + ')';
-              let pos = cm.getCursor('from');
-              cm.replaceRange(mdImage, pos);
-              cm.setCursor({
-                line: pos.line,
-                ch: pos.ch + 2
-              });
-              cm.replaceSelection('图像描述', 'around');
-            }
-            _this.hideDialog();
-            _this.loading = false;
-          }, function(err) {
-            _this.hideDialog();
-            _this.loading = false;
-            console.log(err);
-          })
-          return false;
-          // return new Promise(function() {},function() {});
-        }
-      }]
-    }
-    _this.showDialog(dialog);
+    _this.cm.setOption('readOnly', true)
+    _this.imageDialog = true;
+  },
+  table: function(cm, _this) {
+    _this.tableDialog = true;
   },
   inlineCode: function(cm) {
     Common.setWrapLabel(cm, '\`');
+    cm.focus();
   },
   blockCode: function(cm) {
     let defaultLang = 'javascript'
@@ -206,16 +176,42 @@ export const toolbarHandlers = {
         cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
       }
     }
+    cm.focus();
+  },
+  previewMode: function(cm, _this) {
+    _this.readShow = true;
+    _this.readWidth = 50;
+    _this.editShow = true;
+    _this.editWidth = 50;
+  },
+  editMode: function(cm, _this) {
+    _this.editShow = true;
+    _this.readShow = false;
+    _this.editWidth = 100;
+  },
+  readMode: function(cm, _this) {
+    _this.readShow = true;
+    _this.editShow = false;
+    _this.readWidth = 100;
+  },
+  exchange: function(cm, _this) {
+    _this.layoutDirection = !_this.layoutDirection;
+    cm.focus();
   },
   // 不显示在工具栏的命令，仅支持快捷键
   t: function(cm) { // Ctrl+T
     let pos = cm.getCursor('from');
     let currentContent = cm.getLine(pos.line);
+    if (/^[#]{6}/.test(currentContent)) {
+      return
+    }
+
     if (currentContent.trim()[0] == '#') {
       Common.setStartLabel(cm, '#')
     } else {
       Common.setStartLabel(cm, '# ')
     }
+    cm.focus();
   },
   linkWithoutDialog: function(cm) { // Ctrl+Shift+L
     if (cm.somethingSelected()) {
@@ -227,8 +223,23 @@ export const toolbarHandlers = {
     let pos = cm.getCursor();
     cm.setCursor({
       line: pos.line,
-      ch: pos.ch - 1
+      ch: pos.ch - 3
     })
+    cm.focus();
+  },
+
+  // 向后添加行
+  addNewLineAppend: function(cm) { // Ctrl+Enter
+    let pos = cm.getCursor();
+    cm.setCursor({ line: pos.line + 1, ch: 0 });
+    cm.replaceSelection('\n', 'start');
+    cm.setCursor({ line: pos.line + 1, ch: 0 });
+  },
+  // 向前添加行
+  addNewLinePrepend: function(cm) { // Ctrl+Shift+Enter
+    let pos = cm.getCursor();
+    cm.setCursor({ line: pos.line, ch: 0 });
+    cm.replaceSelection('\n', 'start');
   }
 }
 
@@ -274,62 +285,82 @@ let Common = (function() {
 })()
 
 
-/*
+/**
+ * _this: Editor实例
+ * cb: 询问后执行的回调函数
+ */
+export function askSave(_this, cb) {
+  if (_this.cm.getValue().trim() !== '' && (!_this.cm.isClean() || !_this.webPost.id)) {
+    console.log('询问是否保存当前文件！');
+    _this.$confirm('是否保存当前文件？', '保存文件', {
+      confirmButtonText: '保存',
+      cancelButtonText: '不保存',
+      type: 'warning',
+      showClose: false,
+      callback: function(action, instance) {
+        // 保存
+        if (action === 'confirm') {
+          savePost(_this, cb)
+        }
+        // 不保存
+        if (action === 'cancel') {
+          cb()
+        }
+      }
+    })
+  } else {
+    // 文件没有内容或者没有过修改
+    console.log('文件没有内容或者没有过修改');
+    if (cb) { cb() }
+  }
 
-dialog format
-a full dialog 
-{
-  show: true,
-  title: '插入链接',
-  formElements: [{
-      //Input、Select、Checkbox、Radio、Switch
-      label: '链接地址:',
-      type: 'input',
-      value: 'http://'
-    }, {
-      label: '链接内容',
-      type: 'input',
-      value: defaultText
-    },
-    {
-      type: 'select',
-      value: '',
-      label: '选择地址:',
-      options: [{
-        label: 'label 1',
-        value: 'shanghai'
-      }, {
-        label: 'label 2',
-        value: 'beijing'
-      }]
-    }
-  ],
-  formButtons: [{
-    text: '取消',
-    type: 'text',
-    handler: function() {
-      console.log('btn cancel clicked');
-      _this.hideDialog();
-    }
-  }, {
-    text: '确定',
-    type: 'primary',
-    handler: function() {
-      console.log('btn confirm clicked');
-      console.log(defaultText);
-      console.log('url:' + dialog.formElements[0].value);
-      console.log('url text:' + dialog.formElements[1].value);
-      let url = dialog.formElements[0].value;
-      let urlText = dialog.formElements[1].value;
-      let link = '[' + urlText + '](' + url + ')';
-      cm.replaceSelection(link)
-      _this.hideDialog();
-
-    }
-  }]
 }
 
 
+function savePost(_this, cb) {
+  if (_this.savingPost) {
+    _this.$message({
+      message: '正在保存，请稍后重试',
+      type: 'warning',
+      showClose: true
+    })
+    return
+  }
 
+  let postTitle = '未命名';
+  let postContent = _this.cm.getValue();
+  if (_this.tocTree.length !== 0) {
+    postTitle = _this.tocTree[0].text
+  }
 
-*/
+  if (_this.webPost.id) {
+    // 网上存在，直接保存
+    let post = _this.webPost;
+    post.set('title', postTitle)
+    post.set('content', postContent)
+    _this.savingPost = true;
+    post.save().then(function(post) {
+      _this.savingPost = false;
+      _this.webPost = post;
+      _this.cm.markClean();
+      _this.$message({
+        message: '文章保存成功！',
+        type: 'success',
+        showClose: true
+      });
+      cb();
+    }, function(err) {
+      _this.$message({
+        message: '文章保存失败！',
+        type: 'error',
+        showClose: true
+      })
+      _this.savingPost = false;
+    })
+  } else {
+    // 新建文章并保存
+    _this.afterSaveCallback = cb
+    _this.savePostDialog = true;
+  }
+
+}
