@@ -5,7 +5,7 @@
       <el-collapse-item title="打开网络文件" name="1">
         <el-table style="width: 100%" :data="postArr" :border="true" height="300" empty-text="暂无文章" v-loading.body="loading" element-loading-text="拼命加载中">
           <el-table-column property="attributes.title" label="文件名"></el-table-column>
-          <el-table-column property="attributes.category.attributes.label" label="分类" width="150"></el-table-column>
+          <el-table-column property="attributes.category.attributes.category" label="分类" width="150"></el-table-column>
           <el-table-column property="postOperate" label="操作" align="center" width="80">
             <template scope="scope">
               <el-button type="primary" size="small" @click="openWebPost(scope.row)">
@@ -56,6 +56,7 @@ export default {
         if (!_this.$parent.currentFileInfo.localMode) {
           _this.activePanel = '1'
           getAllPosts().then(function(posts) {
+            console.log(posts);
             _this.postArr = posts;
             _this.loading = false;
           }, function(err) {

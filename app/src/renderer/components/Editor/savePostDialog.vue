@@ -7,7 +7,7 @@
       </el-form-item>
       <el-form-item label="选择文章分类">
         <el-select v-model="postCategory" filterable placeholder="请选择文章分类" style="width:100%">
-          <el-option v-for="item in categories" :key="item.id" :label="item.attributes.label" :value="item.id">
+          <el-option v-for="item in categories" :key="item.id" :label="item.get('category')" :value="item.id">
           </el-option>
         </el-select>
       </el-form-item>
@@ -53,8 +53,8 @@ export default {
           _this.postTitle = tocTree[0].text
         }
         // 获取所有分类
-        console.log(getCategories());
         getCategories().then(function(results) {
+          console.log(results);
           _this.categories = results;
         }, function(err) {
           _this.$message({

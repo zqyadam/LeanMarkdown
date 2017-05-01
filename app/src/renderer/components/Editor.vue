@@ -44,16 +44,7 @@
       </section>
     </div>
     <!-- hidden dialogs -_-!!  -->
-    <!-- <keep-alive> -->
-    <component :is="currentDialog" :show="showDialog">
-    </component>
-    <!-- </keep-alive> -->
-    <!-- <linkDialog :options="{cm:cm, show:linkDialog}"></linkDialog> -->
-    <!-- <imageDialog :options="{cm:cm, show: imageDialog}" @uploadingImageFile="uploadingImageFile"></imageDialog> -->
-    <!--  <tableDialog :options="{cm:cm, show:tableDialog}"></tableDialog> -->
-    <!-- <openPostDialog :options="{cm:cm, show:openPostDialog}"></openPostDialog> -->
-    <!-- <savePostDialog :options="{cm:cm, show:savePostDialog}"></savePostDialog> -->
-    <!-- <settingDialog :show="settingDialog"></settingDialog> -->
+    <component :is="currentDialog" :show="showDialog"></component>
   </div>
 </template>
 <script>
@@ -144,13 +135,6 @@ export default {
         // dialog options
         currentDialog: '',
         showDialog: false,
-        // linkDialog: false,
-        imageDialog: false,
-        // tableDialog: false,
-        // newPostDialog: false,
-        // openPostDialog: false,
-        // savePostDialog: false,
-        // settingDialog: false,
         savingPost: false,
         afterSaveCallback: null,
         // upload image
@@ -503,7 +487,7 @@ export default {
       //     addCategory('未分类')
       //   }
       // })
-     
+
     }
 }
 </script>
