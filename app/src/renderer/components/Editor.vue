@@ -139,10 +139,7 @@ export default {
         afterSaveCallback: null,
         // upload image
         uploadingImage: false,
-        uploadingImageText: '',
-        // for test
-        time1: 0,
-        time2: 0
+        uploadingImageText: ''
       }
     },
     components: {
@@ -185,8 +182,8 @@ export default {
           _this.cm.setValue(this.result)
           _this.cm.markClean()
           _this.webPost = {};
-          _this.currentFileInfo.filepath = file.path;
           _this.currentFileInfo.localMode = true;
+          _this.currentFileInfo.filepath = file.path;
         }
       },
       editorScroll: function(cm, e) {
@@ -286,12 +283,28 @@ export default {
         this.HTMLContent = html;
       },
       'currentFileInfo.localMode': function(val) {
+        console.log('local mode changed');
         console.log(val);
         if (val) { // 本地模式
-          document.title = 'LeanMarkdown [本地模式]'
+          document.title = 'LeanMarkdown [本地模式] ' + this.currentFileInfo.filepath
         } else { // 网络模式
-          document.title = 'LeanMarkdown [网络模式]'
+          document.title = 'LeanMarkdown [网络模式] ' + (this.webPost.id ? this.webPost.get('title') : '')
         }
+      },
+      'currentFileInfo.filepath': function(val) {
+        console.log('local filepath changed');
+        console.log(val);
+        if (this.currentFileInfo.localMode) { // 本地模式
+          document.title = 'LeanMarkdown [本地模式] ' + val
+        } else { // 网络模式
+          document.title = 'LeanMarkdown [网络模式] ' + (this.webPost.id ? this.webPost.get('title') : '')
+        }
+      },
+      'webPost': function(post) {
+        if (!post.id) {
+          return
+        }
+        document.title = 'LeanMarkdown [网络模式] ' + (post.id ? post.get('title') : '')
       }
     },
     created: function() {
