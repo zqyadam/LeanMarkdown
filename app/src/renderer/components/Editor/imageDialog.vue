@@ -24,7 +24,6 @@ export default {
     methods: {
       close: function() {
         console.log('closing image dialog');
-        this.options.cm.setOption('readOnly',false)
         this.options.cm.focus();
         this.$parent.imageDialog = false;
         // this.$emit('close')

@@ -47,7 +47,6 @@ export default {
         this.linkText = '';
         this.linkTitle = '';
         this.linkAddress = '';
-        this.$parent.cm.setOption('readOnly', false)
         this.$parent.cm.focus();
         this.$parent.showDialog = false;
       },

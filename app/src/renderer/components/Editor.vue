@@ -145,7 +145,7 @@ export default {
         currentDialog: '',
         showDialog: false,
         // linkDialog: false,
-        // imageDialog: false,
+        imageDialog: false,
         // tableDialog: false,
         // newPostDialog: false,
         // openPostDialog: false,

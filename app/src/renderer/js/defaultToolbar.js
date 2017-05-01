@@ -175,12 +175,10 @@ export const toolbarHandlers = {
     cm.focus();
   },
   link: function(cm, _this) {
-    _this.cm.setOption('readOnly', true)
     _this.currentDialog = 'linkDialog'
     _this.showDialog = true;
   },
   image: function(cm, _this) {
-    _this.cm.setOption('readOnly', true)
     _this.imageDialog = true;
   },
   table: function(cm, _this) {
