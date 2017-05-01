@@ -179,7 +179,8 @@ export const toolbarHandlers = {
     _this.showDialog = true;
   },
   image: function(cm, _this) {
-    _this.imageDialog = true;
+    _this.currentDialog = 'imageDialog';
+    _this.showDialog = true;
   },
   table: function(cm, _this) {
     _this.currentDialog = 'tableDialog'
