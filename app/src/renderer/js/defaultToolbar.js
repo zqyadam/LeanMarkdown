@@ -374,9 +374,9 @@ function savePost(_this, cb) {
       let post = _this.webPost;
       post.set('title', postTitle)
       post.set('content', postContent)
-      // _this.currentDialog = 'savePostDialog'
-      // _this.showDialog = true;
-      post.save({fetchWhenSave:true}).then(function(post) {
+        // _this.currentDialog = 'savePostDialog'
+        // _this.showDialog = true;
+      post.save({ fetchWhenSave: true }).then(function(post) {
         // _this.showDialog = false;
         _this.webPost = post;
         _this.cm.markClean();
@@ -397,7 +397,7 @@ function savePost(_this, cb) {
     } else {
       // 新建文章并保存
       _this.afterSaveCallback = cb
-      _this.currentDialog = 'savePostDialog' 
+      _this.currentDialog = 'savePostDialog'
       _this.showDialog = true;
     }
   } else {
@@ -432,5 +432,10 @@ function saveLocalFile(_this) {
     NProgress.set(0.6)
     fs.writeFileSync(_this.currentFileInfo.filepath, fileContent, 'utf8');
     NProgress.done();
+    _this.$message({
+      message: '文章保存成功！',
+      type: 'success',
+      showClose: true
+    });
   }
 }
