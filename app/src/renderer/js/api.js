@@ -7,37 +7,43 @@ export let APP_ID = 'your_app_id';
 export let APP_KEY = 'your_app_key';
 
 */
+
+
+
+// export let requestLogin = function(username, password) {
+//   if (!username || !password) {
+//     return null
+//   }
+//   return AV.User.logIn(username, password);
+// }
+
+// export let requestLogout = function() {
+//   AV.User.logOut();
+// }
+
+// export let isLoggedIn = function() {
+//   return AV.User.current() ? true : false;
+// }
+
+let Post = AV.Object.extend('Post');
+let Category = AV.Object.extend('Category');
+
 export const initAV = function(settings) {
   AV.init({
     appId: settings.appId,
     appKey: settings.appKey
   });
+  addCategory('未分类')
 }
 
-
-
-export let requestLogin = function(username, password) {
-  if (!username || !password) {
-    return null
-  }
-  return AV.User.logIn(username, password);
-}
-
-export let requestLogout = function() {
-  AV.User.logOut();
-}
-
-export let isLoggedIn = function() {
-  return AV.User.current() ? true : false;
-}
 
 export let requestImageUploadFromLocal = function(fileObj) {
   console.log('uploading image');
   let file = new AV.File(fileObj.name, fileObj);
-  let acl = new AV.ACL();
-  acl.setPublicReadAccess(true);
-  acl.setWriteAccess(AV.User.current(), true);
-  file.setACL(acl)
+  // let acl = new AV.ACL();
+  // acl.setPublicReadAccess(true);
+  // acl.setWriteAccess(AV.User.current(), true);
+  // file.setACL(acl)
   return file;
 }
 
@@ -46,10 +52,10 @@ export let requestImageUploadFromStream = function(fileName, fileStream) {
   console.log('uploading image from stream');
   let data = { base64: fileStream };
   let file = new AV.File(fileName, data);
-  let acl = new AV.ACL();
-  acl.setPublicReadAccess(true);
-  acl.setWriteAccess(AV.User.current(), true);
-  file.setACL(acl)
+  // let acl = new AV.ACL();
+  // acl.setPublicReadAccess(true);
+  // acl.setWriteAccess(AV.User.current(), true);
+  // file.setACL(acl)
   return file
 }
 
@@ -67,12 +73,12 @@ export let createNewPost = function(title, content = '', categoryID = '') {
   post.set('title', title);
   post.set('category', category);
   post.set('content', content);
-  post.set('owner', AV.User.current())
-    // 添加acl权限
-  let acl = new AV.ACL();
-  acl.setPublicReadAccess(true);
-  acl.setWriteAccess(AV.User.current(), true);
-  post.setACL(acl);
+  // post.set('owner', AV.User.current())
+  // 添加acl权限
+  // let acl = new AV.ACL();
+  // acl.setPublicReadAccess(true);
+  // acl.setWriteAccess(AV.User.current(), true);
+  // post.setACL(acl);
   console.log(post);
   return post.save();
 }
@@ -94,25 +100,39 @@ export let savePost = function(post, postTitle, postContent) {
 
 export let getAllPosts = function() {
   let query = new AV.Query('Post');
-  query.equalTo('owner', AV.User.current());
+  // query.equalTo('owner', AV.User.current());
   query.include(['category']);
   return query.find();
 }
 
 export let getCategories = function() {
   let query = new AV.Query('Category');
-  query.equalTo('owner', AV.User.current());
+  // query.equalTo('owner', AV.User.current());
   return query.find();
 }
 
-export let addCategory = function(categoryName) {
-  let cat = new Category();
-  let acl = new AV.ACL();
-  acl.setPublicReadAccess(true);
-  acl.setWriteAccess(AV.User.current(), true);
-  cat.set('owner', AV.User.current())
-  cat.set('category', categoryName);
-  cat.setACL(acl);
+export let categoryExists = function(categoryName) {
+  let catQuery = new AV.Query('Category');
+  // catQuery.matches('category',/[未分类]/);
+  catQuery.matches('category', /[未分类]/);
+  return catQuery.find().then(function(result) {
+    console.log(result);
+    return result.length !== 0;
+  });
+}
 
-  return cat.save();
+
+export let addCategory = function(categoryName) {
+  let catQuery = new AV.Query('Category');
+  // catQuery.matches('category',/[未分类]/);
+  catQuery.matches('category', /[未分类]/);
+  return catQuery.find().then(function(result) {
+    console.log(result);
+    if (result.length === 0) {
+      let cat = new Category();
+      cat.set('category', categoryName);
+      return cat.save();
+    }
+  });
+
 }

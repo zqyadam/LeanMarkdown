@@ -1,6 +1,13 @@
 import { requestImageUploadFromLocal, createNewPost } from './api.js'
+import NProgress from 'nprogress/nprogress.js'
 
-export const toolbar = ['newFile', 'openFile', 'saveFile', 'split', 'undo', 'redo', 'bold', 'del', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image', 'table', 'inlineCode', 'blockCode', 'split', 'previewMode', 'editMode', 'readMode', 'exchange','help'];
+
+const fs = require('fs');
+const {
+  dialog
+} = require('electron').remote;
+
+export const toolbar = ['newFile', 'openFile', 'saveFile', 'split', 'undo', 'redo', 'bold', 'del', 'italic', 'quote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'hr', 'link', 'image', 'table', 'inlineCode', 'blockCode', 'split', 'previewMode', 'editMode', 'readMode', 'exchange', 'help'];
 
 export const toolbarIconsClass = {
   'newFile': 'z-file-o',
@@ -30,7 +37,7 @@ export const toolbarIconsClass = {
   'editMode': 'z-bianji',
   'readMode': 'z-computer',
   'exchange': 'z-exchange',
-  'help':'z-help'
+  'help': 'z-help'
 }
 
 export const toolbarIconTips = {
@@ -61,7 +68,7 @@ export const toolbarIconTips = {
   'editMode': '编辑模式',
   'readMode': '阅读模式',
   'exchange': '左右交换',
-  'help':'使用帮助'
+  'help': '使用帮助'
 }
 export const toolbarHandlers = {
   newFile: function(cm, _this) {
@@ -74,16 +81,40 @@ export const toolbarHandlers = {
       _this.cm.setCursor({ line: pos.line, ch: pos.ch + 2 });
       _this.cm.focus();
       _this.webPost = {};
+      _this.currentFileInfo.filepath = '';
     })
   },
   openFile: function(cm, _this) {
     askSave(_this, function() {
       console.log('显示打开文件对话框');
-      _this.openPostDialog = true;
+      _this.currentDialog = 'openPostDialog'
+      _this.showDialog = true;
     })
   },
   saveFile: function(cm, _this) {
-    savePost(_this)
+    console.log(_this.currentFileInfo.localMode);
+    if (!_this.currentFileInfo.localMode) {
+      // 网络模式
+      if (_this.webPost.id) {
+        // 网上已存在
+        savePost(_this);
+      } else {
+        // 网上不存在
+        _this.$confirm('请选择保存位置', '保存文件', {
+          confirmButtonText: '保存到网络',
+          cancelButtonText: '保存到本地',
+          showClose: false,
+          type: 'info'
+        }).then(() => {
+          savePost(_this);
+        }).catch(() => {
+          saveLocalFile(_this)
+        })
+      }
+    } else {
+      // 本地模式
+      saveLocalFile(_this)
+    }
   },
   undo: function(cm) {
     cm.undo();
@@ -95,7 +126,7 @@ export const toolbarHandlers = {
     Common.setWrapLabel(cm, '**');
     cm.focus();
   },
-  del:function(cm) {
+  del: function(cm) {
     Common.setWrapLabel(cm, '~~');
     cm.focus();
   },
@@ -145,14 +176,16 @@ export const toolbarHandlers = {
   },
   link: function(cm, _this) {
     _this.cm.setOption('readOnly', true)
-    _this.linkDialog = true;
+    _this.currentDialog = 'linkDialog'
+    _this.showDialog = true;
   },
   image: function(cm, _this) {
     _this.cm.setOption('readOnly', true)
     _this.imageDialog = true;
   },
   table: function(cm, _this) {
-    _this.tableDialog = true;
+    _this.currentDialog = 'tableDialog'
+    _this.showDialog = true;
   },
   inlineCode: function(cm) {
     Common.setWrapLabel(cm, '\`');
@@ -197,6 +230,10 @@ export const toolbarHandlers = {
   exchange: function(cm, _this) {
     _this.layoutDirection = !_this.layoutDirection;
     cm.focus();
+  },
+  settings: function(cm, _this) {
+    _this.currentDialog = 'settingDialog';
+    _this.showDialog = true;
   },
   // 不显示在工具栏的命令，仅支持快捷键
   t: function(cm) { // Ctrl+T
@@ -326,41 +363,75 @@ function savePost(_this, cb) {
     })
     return
   }
-
   let postTitle = '未命名';
   let postContent = _this.cm.getValue();
   if (_this.tocTree.length !== 0) {
     postTitle = _this.tocTree[0].text
   }
-
-  if (_this.webPost.id) {
-    // 网上存在，直接保存
-    let post = _this.webPost;
-    post.set('title', postTitle)
-    post.set('content', postContent)
-    _this.savingPost = true;
-    post.save().then(function(post) {
-      _this.savingPost = false;
-      _this.webPost = post;
-      _this.cm.markClean();
-      _this.$message({
-        message: '文章保存成功！',
-        type: 'success',
-        showClose: true
-      });
-      cb();
-    }, function(err) {
-      _this.$message({
-        message: '文章保存失败！',
-        type: 'error',
-        showClose: true
+  if (!_this.currentFileInfo.localMode) {
+    // 网络模式
+    if (_this.webPost.id) {
+      // 网上存在，直接保存
+      let post = _this.webPost;
+      post.set('title', postTitle)
+      post.set('content', postContent)
+      // _this.currentDialog = 'savePostDialog'
+      // _this.showDialog = true;
+      post.save({fetchWhenSave:true}).then(function(post) {
+        // _this.showDialog = false;
+        _this.webPost = post;
+        _this.cm.markClean();
+        _this.$message({
+          message: '文章保存成功！',
+          type: 'success',
+          showClose: true
+        });
+        cb();
+      }, function(err) {
+        _this.$message({
+          message: '文章保存失败！',
+          type: 'error',
+          showClose: true
+        })
+        _this.showDialog = false;
       })
-      _this.savingPost = false;
-    })
+    } else {
+      // 新建文章并保存
+      _this.afterSaveCallback = cb
+      _this.currentDialog = 'savePostDialog' 
+      _this.showDialog = true;
+    }
   } else {
-    // 新建文章并保存
-    _this.afterSaveCallback = cb
-    _this.savePostDialog = true;
+    // 本地模式
+    saveLocalFile(_this)
   }
 
+}
+
+// 保存文件
+function saveLocalFile(_this) {
+
+  if (!_this.currentFileInfo.filepath) {
+    let saveFilePath = dialog.showSaveDialog({
+      title: '保存到本地',
+      filters: [{
+        name: 'Makrdown',
+        extensions: ['md', 'txt'],
+      }, {
+        name: '所有文件',
+        extensions: ['*']
+      }]
+    })
+    _this.currentFileInfo.filepath = saveFilePath ? saveFilePath : '';
+  }
+  if (_this.currentFileInfo.filepath) {
+    console.log('saving local file');
+    NProgress.start()
+    NProgress.set(0.2)
+    NProgress.set(0.4)
+    let fileContent = _this.cm.getValue();
+    NProgress.set(0.6)
+    fs.writeFileSync(_this.currentFileInfo.filepath, fileContent, 'utf8');
+    NProgress.done();
+  }
 }

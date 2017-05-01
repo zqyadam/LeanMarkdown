@@ -1,5 +1,5 @@
 <template>
-  <el-dialog @close="close" v-model="options.show" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" size="tiny">
+  <el-dialog @close="close" v-model="showDialog" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" >
     <span slot="title"><i class="el-icon-z-table"></i><span style="margin-left:5px;">插入表格</span></span>
     <el-row type="flex" justify="center" align="middle">
       <el-col :span="4" align>行数:</el-col>
@@ -31,9 +31,14 @@ export default {
         colNum: 2
       }
     },
+    computed:{
+      showDialog:function() {
+        return this.show;
+      }
+    },
     props: {
-      options: {
-        type: Object,
+      show: {
+        type: Boolean,
         required: true
       }
     },
@@ -41,21 +46,21 @@ export default {
       close: function() {
         this.rowNum = 2;
         this.colNum = 2;
+        this.$parent.showDialog = false;
       },
       cancel: function() {
-        this.$parent.tableDialog = false;
+        this.$parent.showDialog = false;
       },
       confirm: function() {
-        let that = this.$parent;
         let headerSplit = '---------';
         let spaceSplit = '    ';
         let columnSplit = '|';
-        let pos = that.cm.getCursor();
+        let pos = this.$parent.cm.getCursor();
         let tableStr = '\n'
         for (let i = 0; i <= this.rowNum; i++) {
           // title
           if (i == 1) {
-            for (let j = 0; j <= this.colNum; j++) {
+            for (let j = 1; j <= this.colNum; j++) {
               tableStr += columnSplit;
               tableStr += headerSplit;
             }
@@ -63,7 +68,7 @@ export default {
             tableStr += '\n';
             continue;
           } else {
-            for (let j = 0; j <= this.colNum; j++) {
+            for (let j = 1; j <= this.colNum; j++) {
               tableStr += columnSplit;
               tableStr += spaceSplit;
             }
@@ -71,13 +76,12 @@ export default {
             tableStr += '\n';
           }
         }
-        console.log(tableStr);
-        that.cm.replaceRange(tableStr, {
+        this.$parent.cm.replaceRange(tableStr, {
           line: pos.line + 1,
           ch: 0
         });
         tableStr = null;
-        this.$parent.tableDialog = false;
+        this.$parent.showDialog = false;
       }
     }
 }

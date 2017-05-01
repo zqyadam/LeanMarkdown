@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="options.show" title="添加链接" :close-on-press-escape="true" @open="open" :modal="false" :close-on-click-modal="false" @close="close">
+  <el-dialog v-model="show" title="添加链接" :close-on-press-escape="true" @open="open" :modal="false" :close-on-click-modal="false" @close="close">
     <el-form label-width="80px" label-position="right">
       <el-form-item label="链接内容">
         <el-input v-model="linkText" :autofocus="true"></el-input>
@@ -28,32 +28,32 @@ export default {
       }
     },
     props: {
-      options: {
-        type: Object,
+      show: {
+        type: Boolean,
         required: true
       },
     },
     methods: {
       cancel: function() {
-        this.$parent.linkDialog = false;
+        this.$parent.showDialog = false;
       },
       confirm: function() {
         let link = '[' + this.linkText + '](' + this.linkAddress + (this.linkTitle ? ' "' + this.linkTitle + '"' : '') + ')';
-        this.options.cm.replaceSelection(link);
-        this.$parent.linkDialog = false;
+        this.$parent.cm.replaceSelection(link);
+        this.$parent.showDialog = false;
       },
       close: function() {
         console.log('closing link dialog');
         this.linkText = '';
         this.linkTitle = '';
         this.linkAddress = '';
-        this.options.cm.setOption('readOnly', false)
-        this.options.cm.focus();
-        this.$parent.linkDialog = false;
+        this.$parent.cm.setOption('readOnly', false)
+        this.$parent.cm.focus();
+        this.$parent.showDialog = false;
       },
       open: function() {
-        if (this.options.cm.somethingSelected()) {
-          this.linkText = this.options.cm.getSelection();
+        if (this.$parent.cm.somethingSelected()) {
+          this.linkText = this.$parent.cm.getSelection();
         }
       }
     }

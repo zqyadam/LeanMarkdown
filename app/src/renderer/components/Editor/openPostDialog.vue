@@ -1,5 +1,5 @@
 <template>
-  <el-dialog @close="close" v-model="options.show" @open="open" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false">
+  <el-dialog @close="close" v-model="showDialog" @open="open" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false">
     <span slot="title"><i class="el-icon-z-folder-open-o"></i><span style="margin-left:5px;">打开文件</span></span>
     <el-collapse accordion v-model="activePanel">
       <el-collapse-item title="打开网络文件" name="1">
@@ -37,9 +37,14 @@ export default {
         loading: false
       }
     },
+    computed:{
+      showDialog:function() {
+        return this.show;
+      }
+    },
     props: {
-      options: {
-        type: Object,
+      show: {
+        type: Boolean,
         required: true
       }
     },
@@ -47,6 +52,9 @@ export default {
       open: function() {
         let _this = this;
         // _this.loading = true;
+        console.log(_this.$parent.currentFileInfo);
+        if (!_this.$parent.currentFileInfo.localMode) {
+          _this.activePanel = '1'
           getAllPosts().then(function(posts) {
             _this.postArr = posts;
             _this.loading = false;
@@ -59,24 +67,27 @@ export default {
             console.log(err);
             _this.loading = false;
           })
+        } else {
+          _this.activePanel = '2'
+        }
       },
       close: function() {
-        console.log('closing openPostDialog');
+        console.log('closing showDialog');
         this.postArr = null;
-        this.$parent.openPostDialog = false;
+        this.$parent.showDialog = false;
       },
       openWebPost: function(row) {
         console.log('打开网络文件:');
         this.$parent.webPost = row;
         this.$parent.cm.setValue(row.attributes.content)
         this.$parent.cm.markClean();
-        localStorage.setItem('currentPostID', row.id);
+        // localStorage.setItem('currentPostID', row.id);
         this.$message({
           message: '打开文章成功！',
           type: 'success',
           showClose: true
         })
-        this.$parent.openPostDialog = false;
+        this.$parent.showDialog = false;
       },
       openLocalFile: function(file) {
         if (/\.(md|txt)$/i.test(file.name)) {
@@ -84,7 +95,7 @@ export default {
           console.log('打开本地文件');
           this.$parent.openLocalFile(file);
         }
-        this.$parent.openPostDialog = false;
+        this.$parent.showDialog = false;
         // 禁止上传
         return false;
       }

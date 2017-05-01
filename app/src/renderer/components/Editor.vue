@@ -11,12 +11,22 @@
         </template>
       </el-button-group>
       <el-button-group class="toolbar-right">
-        <el-tooltip effect="dark" content="进入管理面板" placement="bottom">
-          <el-button icon="z-guanli" size="small" class="dark" @click="$router.push({name:'dashboard'})">管理</el-button>
+        <el-tooltip effect="dark" content="" placement="bottom">
+          <el-dropdown class="btn-manage" trigger="click" @command="execuateCallback">
+            <el-button class="dark" icon="z-guanli" size="small">
+              管理<i class="el-icon-caret-bottom el-icon--right"></i>
+            </el-button>
+            <el-dropdown-menu slot="dropdown" class="dark">
+              <el-dropdown-item>文章管理</el-dropdown-item>
+              <el-dropdown-item>图片管理</el-dropdown-item>
+              <el-dropdown-item>分类管理</el-dropdown-item>
+              <el-dropdown-item command="settings">应用设置</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </el-tooltip>
-        <el-tooltip effect="dark" content="退出" placement="bottom">
+        <!-- <el-tooltip effect="dark" content="退出" placement="bottom">
           <el-button icon="z-logout" size="small" class="dark" @click="logout">退出</el-button>
-        </el-tooltip>
+        </el-tooltip> -->
       </el-button-group>
     </div>
     <!-- main -->
@@ -30,23 +40,29 @@
         <div class="previewer-container" id="previewer">
           <div class="markdown-body" id="HTMLContent" v-html="HTMLContent">
           </div>
-          <!--  -->
         </div>
       </section>
     </div>
     <!-- hidden dialogs -_-!!  -->
-    <linkDialog :options="{cm:cm, show:linkDialog}"></linkDialog>
-    <imageDialog :options="{cm:cm, show: imageDialog}" @uploadingImageFile="uploadingImageFile"></imageDialog>
-    <tableDialog :options="{cm:cm, show:tableDialog}"></tableDialog>
-    <openPostDialog :options="{cm:cm, show:openPostDialog}"></openPostDialog>
-    <savePostDialog :options="{cm:cm, show:savePostDialog}"></savePostDialog>
+    <!-- <keep-alive> -->
+    <component :is="currentDialog" :show="showDialog">
+    </component>
+    <!-- </keep-alive> -->
+    <!-- <linkDialog :options="{cm:cm, show:linkDialog}"></linkDialog> -->
+    <!-- <imageDialog :options="{cm:cm, show: imageDialog}" @uploadingImageFile="uploadingImageFile"></imageDialog> -->
+    <!--  <tableDialog :options="{cm:cm, show:tableDialog}"></tableDialog> -->
+    <!-- <openPostDialog :options="{cm:cm, show:openPostDialog}"></openPostDialog> -->
+    <!-- <savePostDialog :options="{cm:cm, show:savePostDialog}"></savePostDialog> -->
+    <!-- <settingDialog :show="settingDialog"></settingDialog> -->
   </div>
 </template>
 <script>
 import {
-  requestLogout,
   requestImageUploadFromStream,
   requestImageUploadFromLocal,
+  initAV,
+  addCategory,
+  categoryExists
 } from '../js/api.js'
 
 import {
@@ -93,6 +109,8 @@ import imageDialog from './Editor/imageDialog'
 import tableDialog from './Editor/tableDialog'
 import openPostDialog from './Editor/openPostDialog'
 import savePostDialog from './Editor/savePostDialog'
+import settingDialog from './Editor/settingDialog'
+import categoryDialog from './Editor/categoryDialog'
 
 
 export default {
@@ -104,7 +122,10 @@ export default {
         cm: {},
         rendering: false,
         webPost: {},
-        currentFileInfo: {},
+        currentFileInfo: {
+          filepath: '',
+          localMode: false
+        },
         // layout options
         layoutDirection: true,
         editWidth: 50,
@@ -121,12 +142,15 @@ export default {
         toolbarIconTips: toolbarIconTips,
         toolbarHandlers: toolbarHandlers,
         // dialog options
-        linkDialog: false,
-        imageDialog: false,
-        tableDialog: false,
-        newPostDialog: false,
-        openPostDialog: false,
-        savePostDialog: false,
+        currentDialog: '',
+        showDialog: false,
+        // linkDialog: false,
+        // imageDialog: false,
+        // tableDialog: false,
+        // newPostDialog: false,
+        // openPostDialog: false,
+        // savePostDialog: false,
+        // settingDialog: false,
         savingPost: false,
         afterSaveCallback: null,
         // upload image
@@ -142,9 +166,14 @@ export default {
       'imageDialog': imageDialog,
       'tableDialog': tableDialog,
       'openPostDialog': openPostDialog,
-      'savePostDialog': savePostDialog
+      'savePostDialog': savePostDialog,
+      'settingDialog': settingDialog,
+      'categoryDialog': categoryDialog
     },
     methods: {
+      editor: function() {
+        return this;
+      },
       tocTreeToHtml: function(tree) {
         let startLabel = "<ul>";
         let endLabel = "</ul>";
@@ -168,12 +197,12 @@ export default {
         let reader = new FileReader();
         reader.readAsText(file);
         reader.onload = function(e) {
-          localStorage.setItem('currentPostID', '')
           _this.cm.clearHistory();
           _this.cm.setValue(this.result)
           _this.cm.markClean()
           _this.webPost = {};
           _this.currentFileInfo.filepath = file.path;
+          _this.currentFileInfo.localMode = true;
         }
       },
       editorScroll: function(cm, e) {
@@ -271,6 +300,14 @@ export default {
           Prism.highlightAll()
         })
         this.HTMLContent = html;
+      },
+      'currentFileInfo.localMode': function(val) {
+        console.log(val);
+        if (val) { // 本地模式
+          document.title = 'LeanMarkdown [本地模式]'
+        } else { // 网络模式
+          document.title = 'LeanMarkdown [网络模式]'
+        }
       }
     },
     created: function() {
@@ -438,6 +475,35 @@ export default {
         })
         // this.cm.setValue(fakeData)
 
+      // 初始化网络设置
+      let settings = localStorage.getItem('settings')
+      console.log('loading settings');
+      console.log(settings);
+      if (!settings) {
+        // 本地模式
+        this.currentDialog = 'settingDialog';
+        this.showDialog = true;
+        this.currentFileInfo.localMode = true;
+      } else {
+        // 网络模式
+        this.settings = JSON.parse(settings);
+        initAV(this.settings);
+        this.currentFileInfo.localMode = false;
+      }
+      // 更改标题
+      if (this.currentFileInfo.localMode) { // 本地模式
+        document.title = 'LeanMarkdown [本地模式]'
+      } else { // 网络模式
+        document.title = 'LeanMarkdown [网络模式]'
+      }
+
+      // categoryExists('未分类').then(function(exist) {
+      //   console.log(exist);
+      //   if (!exist) {
+      //     addCategory('未分类')
+      //   }
+      // })
+     
     }
 }
 </script>
@@ -483,7 +549,9 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  height: 32px;
+  height: 40px;
+  align-items: center;
+  font-family: 'Consolas', '微软雅黑';
 }
 
 .toolbar-left {

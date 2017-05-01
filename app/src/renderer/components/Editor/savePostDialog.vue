@@ -1,5 +1,5 @@
 <template>
-  <el-dialog @open="open" @close="close" v-model="options.show" size="tiny" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" ref="dialog">
+  <el-dialog @open="open" @close="close" v-model="showDialog" size="tiny" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" ref="dialog">
     <span slot="title"><i class="el-icon-z-save1"></i><span style="margin-left:5px;">保存文件</span></span>
     <el-form label-width="80px" label-position="top">
       <el-form-item label="填写文章标题">
@@ -13,7 +13,7 @@
       </el-form-item>
       <el-form-item style="text-align:center">
         <el-button type="primary" @click="savePost">保存</el-button>
-        <el-button @click="$parent.savePostDialog = false">取消</el-button>
+        <el-button @click="$parent.showDialog = false">取消</el-button>
       </el-form-item>
     </el-form>
   </el-dialog>
@@ -32,9 +32,14 @@ export default {
         activePanel: '1'
       }
     },
+    computed:{
+      showDialog:function() {
+        return this.show;
+      }
+    },
     props: {
-      options: {
-        type: Object,
+      show: {
+        type: Boolean,
         required: true
       }
     },
@@ -48,6 +53,7 @@ export default {
           _this.postTitle = tocTree[0].text
         }
         // 获取所有分类
+        console.log(getCategories());
         getCategories().then(function(results) {
           _this.categories = results;
         }, function(err) {
@@ -64,7 +70,7 @@ export default {
         if (this.$parent.afterSaveCallback) {
           this.$parent.afterSaveCallback();
         }
-        this.$parent.savePostDialog = false;
+        this.$parent.showDialog = false;
       },
       savePost: function() {
         console.log('saving to leancloud, creating a new dream');
@@ -93,7 +99,7 @@ export default {
           })
           return
         }
-        let postPromise = createNewPost(this.postTitle, this.options.cm.getValue(), this.postCategory);
+        let postPromise = createNewPost(this.postTitle, this.$parent.cm.getValue(), this.postCategory);
         console.log(postPromise);
         _this.$parent.savingPost = true;
         postPromise.then(function(post) {
@@ -103,9 +109,9 @@ export default {
             type: 'success',
             showClose: true
           });
-          _this.options.cm.markClean();
+          _this.$parent.cm.markClean();
           _this.$parent.webPost = post;
-          _this.$parent.savePostDialog = false;
+          _this.$parent.showDialog = false;
         }, function(err) {
           _this.$message({
             message: '文章保存失败！',
@@ -113,7 +119,7 @@ export default {
             showClose: true
           })
           console.log(err);
-          _this.$parent.savePostDialog = false;
+          _this.$parent.showDialog = false;
           _this.$parent.savingPost = false;
         })
       }
