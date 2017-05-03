@@ -79,14 +79,18 @@ export let requestImageUploadFromStream = function(fileName, fileStream) {
 export let createNewPost = function(title, content = '', category) {
   // console.log(categoryID instanceof Category);
   // 查询分类
-
+  console.log(category);
+  console.log(!(category instanceof Category));
   if (!(category instanceof Category)) {
-    return addCategory(category).then(function(category) {
-        console.log(category);
-      return addPost(category)
+    return addCategory(category).then(function(cat) {
+      console.log(cat);
+      return addPost(cat)
+    },function(err) {
+      console.log('createNewPost: add category failed');
+      console.log(err);
     });
-    console.log(category);
   } else {
+    console.log(category);
     return addPost(category);
   }
   // 分类ID
@@ -95,7 +99,6 @@ export let createNewPost = function(title, content = '', category) {
     let post = new Post();
 
     // 设置文章属性
-    post.fetchWhenSave(true);
     post.set('title', title);
     post.set('category', category);
     post.set('content', content);
@@ -106,7 +109,7 @@ export let createNewPost = function(title, content = '', category) {
     acl.setWriteAccess(AV.User.current(), true);
     post.setACL(acl);
     console.log(post);
-    return post.save();
+    return post.save(null, { fetchWhenSave: true });
   }
 
   // 创建文章
@@ -115,18 +118,16 @@ export let createNewPost = function(title, content = '', category) {
 
 export let savePostWithoutData = function(postId, postTitle, postContent) {
   let post = AV.Object.createWithoutData('Post', postId);
-  post.fetchWhenSave(true);
   post.set('title', postTitle);
   post.set('content', postContent);
 
-  return post.save();
+  return post.save(null, { fetchWhenSave: true });
 }
 
 export let savePost = function(post, postTitle, postContent) {
-  post.fetchWhenSave(true);
   post.set('title', postTitle);
   post.set('content', postContent);
-  return post.save();
+  return post.save(null, { fetchWhenSave: true });
 }
 
 export let getAllPosts = function() {
@@ -153,11 +154,12 @@ export let getCategories = function() {
 
 export let addCategory = function(categoryName) {
   let catQuery = new AV.Query('Category');
-  let categoryNamePattern = new RegExp('['+categoryName+']');
+  let categoryNamePattern = new RegExp('^' + categoryName + '$');
   console.log(categoryNamePattern);
   catQuery.matches('label', categoryNamePattern);
   catQuery.equalTo('owner', AV.User.current());
   return catQuery.find().then(function(result) {
+    console.log(result);
     if (result.length === 0) {
       // category 不存在
       let cat = new Category();
@@ -170,7 +172,7 @@ export let addCategory = function(categoryName) {
       cat.setACL(acl);
       console.log('created a new Category');
       return cat.save();
-    }else{
+    } else {
       return result[0];
     }
   });

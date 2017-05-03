@@ -6,8 +6,8 @@
         <el-input v-model.trim="postTitle" :autofocus="true"></el-input>
       </el-form-item>
       <el-form-item label="选择文章分类">
-        <el-select v-model="postCategory" filterable allow-create clearable  placeholder="请选择文章分类" style="width:100%">
-          <el-option v-for="item in categories" :label="item.get('label')" :value="item">
+        <el-select v-model="postCategory" filterable allow-create clearable placeholder="请选择文章分类" style="width:100%">
+          <el-option v-for="item in categories" :key="item.id" :label="item.get('label')" :value="item.getObjectId()">
           </el-option>
         </el-select>
       </el-form-item>
@@ -27,13 +27,13 @@ export default {
   data() {
       return {
         postTitle: '',
-        postCategory: null,
+        postCategory: '',
         categories: [],
         activePanel: '1'
       }
     },
-    computed:{
-      showDialog:function() {
+    computed: {
+      showDialog: function() {
         return this.show;
       }
     },
@@ -66,7 +66,7 @@ export default {
       close: function() {
         console.log('closing save dialog');
         this.postTitle = '';
-        this.postCategory = null;
+        this.postCategory = '';
         this.categories = [];
         if (this.$parent.afterSaveCallback) {
           this.$parent.afterSaveCallback();
@@ -100,6 +100,14 @@ export default {
           })
           return
         }
+        for (let i = 0; i < _this.categories.length; i++) {
+          if (_this.postCategory === _this.categories[i]) {
+            _this.postCategory = _this.categories[i];
+            break;
+          }
+        }
+
+
         // console.log(_this.postCategory instanceof Category );
         let postPromise = createNewPost(this.postTitle, this.$parent.cm.getValue(), this.postCategory);
         console.log(postPromise);
