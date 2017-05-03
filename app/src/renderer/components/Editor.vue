@@ -24,7 +24,7 @@
             </el-dropdown-menu>
           </el-dropdown>
         </el-tooltip>
-       <!--  <el-tooltip effect="dark" content="退出当前用户" placement="bottom">
+        <!--  <el-tooltip effect="dark" content="退出当前用户" placement="bottom">
           <el-button v-if="isLoggedIn" :plain="true" icon="el-icon-z-logout" size="small" @click="logout" class="dark"></el-button>
         </el-tooltip> -->
       </el-button-group>
@@ -49,6 +49,7 @@
 </template>
 <script>
 import {
+  isLoggedIn,
   requestImageUploadFromStream,
   requestImageUploadFromLocal,
   initAV,
@@ -496,6 +497,10 @@ export default {
         this.settings = JSON.parse(settings);
         initAV(this.settings);
         this.currentFileInfo.localMode = false;
+        if (!isLoggedIn()) {
+          this.currentDialog = 'settingDialog';
+          this.showDialog = true;
+        }
       }
       // 更改标题
       if (this.currentFileInfo.localMode) { // 本地模式

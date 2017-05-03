@@ -33,6 +33,10 @@ export let requestLogout = function() {
   AV.User.logOut();
 }
 
+export let getCurrentUser = function() {
+  return AV.User.current();
+}
+
 export let isLoggedIn = function() {
   return AV.User.current() ? true : false;
 }

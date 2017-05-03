@@ -30,7 +30,8 @@
 import {
   initAV,
   requestLogin,
-  createNewUser
+  createNewUser,
+  getCurrentUser
 } from '../../js/api'
 
 export default {
@@ -74,7 +75,7 @@ export default {
 
           requestLogin(_this.settings.username, _this.settings.password).then(function(user) {
             console.log(user);
-            _this.$parent.$message.success('用户：'+_this.settings.username+'登录成功！');
+            _this.$parent.$message.success('用户：' + _this.settings.username + '登录成功！');
 
             _this.$parent.currentFileInfo.localMode = false;
             _this.$parent.showDialog = false;
@@ -83,6 +84,9 @@ export default {
             console.log('login failed');
             console.log(err.code);
             switch (err.code) {
+              case 201:
+                _this.$parent.$message.error('没有提供密码，或者密码为空');
+                break;
               case 202:
                 _this.$parent.$message.error('用户名已经被占用');
                 break;
@@ -99,30 +103,38 @@ export default {
                 _this.$parent.$message.error('登录过于频繁，请在15分钟后重试！');
                 break;
               case 211:
-
-                _this.$parent.$confirm('找不到用户,是否以本次输入的邮箱和密码创建新用户？', '创建新用户').then(function() {
+                _this.$parent.$confirm('找不到用户，是否以本次输入的邮箱和密码创建新用户？', '创建新用户', {
+                  confirmButtonText: '创建新用户',
+                  cancelButtonText: '不创建',
+                  type: 'warning'
+                }).then(function() {
                   createNewUser(_this.settings.username, _this.settings.password).then(function(user) {
                     console.log(user);
                     _this.$parent.$notify({
-                      type: 'success',
-                      title: '新用户创建成功',
-                      message: '请牢记您的用户名和密码！\n用户名：' + _this.settings.username + '\n密码：' + _this.settings.password,
-                      offset:50
-                    })
+                        type: 'success',
+                        title: '新用户创建成功',
+                        message: '请牢记您的用户名和密码！\n用户名：' + _this.settings.username + '\n密码：' + _this.settings.password,
+                        offset: 50
+                      })
+                      // 切换
+                    _this.$parent.currentFileInfo.localMode = false;
+                    _this.$parent.showDialog = false;
                   }, function(err) {
                     console.log('register fail');
                     console.log(err);
                     _this.$parent.$message.error('新用户创建失败，请检查网络情况！');
+                    _this.$parent.showDialog = false;
                   })
                 }).catch(function() {
                   _this.$parent.$message.warning('取消新用户创建');
                 })
+
                 break;
               default:
                 _this.$parent.$message.error('不知名错误，(⊙﹏⊙)b')
             }
-            _this.$parent.currentFileInfo.localMode = false;
-             _this.$parent.showDialog = false;
+            // _this.$parent.currentFileInfo.localMode = false;
+            //  _this.$parent.showDialog = false;
           })
 
         })
@@ -139,6 +151,9 @@ export default {
         let settings = localStorage.getItem('settings');
         if (settings) {
           this.settings = JSON.parse(settings);
+          let user = getCurrentUser();
+          this.settings.username = (user ? user.getUsername() : '');
+          this.settings.password = '';
         }
       }
     }
