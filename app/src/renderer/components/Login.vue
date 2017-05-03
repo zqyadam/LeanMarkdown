@@ -25,8 +25,8 @@ export default {
   data() {
       return {
         settings: {
-          appId: 'eNnoIjiE17xqBwsupO9t44dJ-gzGzoHsz',
-          appKey: '8dciLHBK67gGfwnsi6zDI1A2'
+          appId: 'KYkddmR5GLXnD15sR7loC42p-gzGzoHsz',
+          appKey: 'FEBSUHwgfS2QHQKfHT1dikH7'
         }
       }
     },

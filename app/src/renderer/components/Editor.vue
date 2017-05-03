@@ -11,7 +11,7 @@
         </template>
       </el-button-group>
       <el-button-group class="toolbar-right">
-        <el-tooltip effect="dark" content="" placement="bottom">
+        <el-tooltip effect="dark" content="选择管理项目" placement="bottom">
           <el-dropdown class="btn-manage" trigger="click" @command="execuateCallback">
             <el-button class="dark" icon="z-guanli" size="small">
               管理<i class="el-icon-caret-bottom el-icon--right"></i>
@@ -20,13 +20,10 @@
               <el-dropdown-item>文章管理</el-dropdown-item>
               <el-dropdown-item>图片管理</el-dropdown-item>
               <el-dropdown-item>分类管理</el-dropdown-item>
-              <el-dropdown-item command="settings">应用设置</el-dropdown-item>
+              <el-dropdown-item command="settings">基本设置</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </el-tooltip>
-        <!-- <el-tooltip effect="dark" content="退出" placement="bottom">
-          <el-button icon="z-logout" size="small" class="dark" @click="logout">退出</el-button>
-        </el-tooltip> -->
       </el-button-group>
     </div>
     <!-- main -->
@@ -64,6 +61,7 @@ import {
   askSave
 } from '../js/defaultToolbar.js'
 
+
 import CodeMirror from 'codemirror/lib/codemirror.js'
 import 'codemirror/addon/selection/active-line.js'
 import 'codemirror/addon/edit/closebrackets.js'
@@ -75,11 +73,8 @@ import '../css/myCodeMirror.css'
 
 import marked from '../js/markdownSettings.js'
 
-// import marked from 'marked'
+
 import 'github-markdown-css/github-markdown.css';
-
-
-// import fakeData from '../fake/data.js'
 
 
 // hightlilght
@@ -170,7 +165,7 @@ export default {
       },
       execuateCallback: function(name) {
         if (this.toolbarHandlers[name]) {
-          this.toolbarHandlers[name](this.cm, this)
+          this.toolbarHandlers[name](this)
         }
       },
       openLocalFile: function(file) {
@@ -271,6 +266,11 @@ export default {
         })
       },
     },
+    props: {
+      mode: {
+        type: Boolean
+      }
+    },
     watch: {
       MdContent: function(newValue) {
         let Content = marked(newValue);
@@ -305,6 +305,9 @@ export default {
           return
         }
         document.title = 'LeanMarkdown [网络模式] ' + (post.id ? post.get('title') : '')
+      },
+      mode: function(val) {
+        this.localMode = val;
       }
     },
     created: function() {
@@ -315,6 +318,7 @@ export default {
       console.log('editor mounted');
       let _this = this;
 
+      // 初始化CodeMirror
       this.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
         mode: 'markdown',
         lineNumbers: true,
@@ -328,11 +332,14 @@ export default {
         styleActiveLine: true,
         autoCloseBrackets: true,
       });
+
+
       //  同步滚动监听
       //  编辑区滚动
       this.cm.on('scroll', this.editorScroll)
         // 预览区滚动
       document.getElementById('previewer').addEventListener('scroll', _this.previewerScroll)
+
 
       // 内容变化监听
       this.cm.on('change', (cm) => {

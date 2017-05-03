@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="showDialog" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" size="tiny" @open="open" @close="close">
-    <span slot="title"><i class="el-icon-z-setting1"></i><span style="margin-left:5px;">应用设置</span></span>
+    <span slot="title"><i class="el-icon-z-setting1"></i><span style="margin-left:5px;">基本设置</span></span>
     <el-form :model="settings" label-width="80px" label-position="left" ref="settingForm" style="width:100%;">
       <el-form-item label="App ID" prop="appId" :rules="[{required:true, message:'App ID不能为空'}]">
         <el-input v-model="settings.appId" placeholder="请输入App ID" type="text">
@@ -8,6 +8,14 @@
       </el-form-item>
       <el-form-item label="App Key" prop="appKey" :rules="[{required:true, message:'App Key不能为空'}]">
         <el-input v-model="settings.appKey" placeholder="请输入App Key" type="text">
+        </el-input>
+      </el-form-item>
+      <el-form-item label="登录邮箱" prop="username" :rules="[{ required: true, message: '请输入邮箱地址', trigger: 'blur' }, { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur,change' }]">
+        <el-input v-model="settings.username" placeholder="请输入App ID" type="text">
+        </el-input>
+      </el-form-item>
+      <el-form-item label="登录密码" prop="password" :rules="[{required:true, message:'密码不能为空'}, { min: 6,  message: '长度不小于6个字符', trigger: 'blur' }]">
+        <el-input v-model="settings.password" placeholder="请输入App Key" type="text">
         </el-input>
       </el-form-item>
       <el-form-item>
@@ -20,15 +28,24 @@
 </template>
 <script>
 import {
-  initAV
+  initAV,
+  requestLogin,
+  createNewUser
 } from '../../js/api'
 
 export default {
   data() {
+
+      // let checkPassword =function(rule, value,callbcak) {
+      //   if (value.length <6 ) {return false}
+      // }
+
       return {
         settings: {
           appId: '', //
-          appKey: '' // 
+          appKey: '', // 
+          username: '',
+          password: ''
         },
       }
     },
@@ -48,12 +65,57 @@ export default {
         let _this = this;
         this.$refs.settingForm.validate(function(validate) {
           console.log(_this.settings);
-          if (validate) {
-            localStorage.setItem('settings', JSON.stringify(_this.settings));
-            initAV(_this.settings);
+          if (!validate) {
+            return
+          }
+          // 初始化应用信息
+          localStorage.setItem('settings', JSON.stringify(_this.settings));
+          initAV(_this.settings);
+
+          requestLogin(_this.settings.username, _this.settings.password).then(function(user) {
+            console.log(user);
+            
+
             _this.$parent.currentFileInfo.localMode = false;
             _this.$parent.showDialog = false;
-          }
+          }, function(err) {
+            // 登录失败，判断失败原因
+            console.log('login failed');
+            console.log(err.code);
+            switch (err.code) {
+              case 202:
+                _this.$parent.$message.error('用户名已经被占用');
+                break;
+              case 203:
+                _this.$parent.$message.error('电子邮箱地址已经被占用');
+                break;
+              case 205:
+                _this.$parent.$message.error('找不到电子邮箱地址对应的用户');
+                break;
+              case 210:
+                _this.$parent.$message.error('用户名和密码不匹配');
+                break;
+              case 219:
+                _this.$parent.$message.error('登录过于频繁，请在15分钟后重试！');
+                break;
+              case 211:
+                _this.$parent.$message.error('找不到用户,将以本次邮箱和密码创建新用户，请稍后....');
+                // 创建新用户
+                console.log('creating new user');
+                createNewUser(_this.settings.username, _this.settings.password).then(function(user) {
+                  console.log(user);
+
+                },function(err) {
+                  console.log('register fail');
+                  console.log(err);
+                })
+                break;
+              default:
+                _this.$parent.$message.error('不知名错误，(⊙﹏⊙)b')
+            }
+
+          })
+
         })
       },
       cancel: function() {

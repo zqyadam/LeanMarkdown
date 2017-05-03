@@ -71,12 +71,12 @@ export const toolbarIconTips = {
   'help': '使用帮助'
 }
 export const toolbarHandlers = {
-  newFile: function(cm, _this) {
+  newFile: function(_this) {
     askSave(_this, function() {
       _this.cm.setValue('');
       _this.cm.clearHistory();
       _this.cm.markClean();
-      let pos = cm.getCursor();
+      let pos = _this.cm.getCursor();
       _this.cm.replaceSelection('# \n\n');
       _this.cm.setCursor({ line: pos.line, ch: pos.ch + 2 });
       _this.cm.focus();
@@ -84,14 +84,14 @@ export const toolbarHandlers = {
       _this.currentFileInfo.filepath = '';
     })
   },
-  openFile: function(cm, _this) {
+  openFile: function(_this) {
     askSave(_this, function() {
       console.log('显示打开文件对话框');
       _this.currentDialog = 'openPostDialog'
       _this.showDialog = true;
     })
   },
-  saveFile: function(cm, _this) {
+  saveFile: function(_this) {
     console.log(_this.currentFileInfo.localMode);
     if (!_this.currentFileInfo.localMode) {
       // 网络模式
@@ -116,166 +116,166 @@ export const toolbarHandlers = {
       saveLocalFile(_this)
     }
   },
-  undo: function(cm) {
-    cm.undo();
+  undo: function(_this) {
+    _this.cm.undo();
   },
-  redo: function(cm) {
-    cm.redo()
+  redo: function(_this) {
+    _this.cm.redo()
   },
-  bold: function(cm) {
-    Common.setWrapLabel(cm, '**');
-    cm.focus();
+  bold: function(_this) {
+    Common.setWrapLabel(_this.cm, '**');
+    _this.cm.focus();
   },
-  del: function(cm) {
-    Common.setWrapLabel(cm, '~~');
-    cm.focus();
+  del: function(_this) {
+    Common.setWrapLabel(_this.cm, '~~');
+    _this.cm.focus();
   },
-  italic: function(cm) {
-    Common.setWrapLabel(cm, '*')
-    cm.focus();
+  italic: function(_this) {
+    Common.setWrapLabel(_this.cm, '*')
+    _this.cm.focus();
   },
-  quote: function(cm) {
-    Common.setStartLabel(cm, '> ')
-    cm.focus();
+  quote: function(_this) {
+    Common.setStartLabel(_this.cm, '> ')
+    _this.cm.focus();
   },
-  h1: function(cm) {
-    Common.setStartLabel(cm, '# ')
-    cm.focus();
+  h1: function(_this) {
+    Common.setStartLabel(_this.cm, '# ')
+    _this.cm.focus();
   },
-  h2: function(cm) {
-    Common.setStartLabel(cm, '## ')
-    cm.focus();
+  h2: function(_this) {
+    Common.setStartLabel(_this.cm, '## ')
+    _this.cm.focus();
   },
-  h3: function(cm) {
-    Common.setStartLabel(cm, '### ')
-    cm.focus();
+  h3: function(_this) {
+    Common.setStartLabel(_this.cm, '### ')
+    _this.cm.focus();
   },
-  h4: function(cm) {
-    Common.setStartLabel(cm, '#### ')
-    cm.focus();
+  h4: function(_this) {
+    Common.setStartLabel(_this.cm, '#### ')
+    _this.cm.focus();
   },
-  h5: function(cm) {
-    Common.setStartLabel(cm, '##### ')
-    cm.focus();
+  h5: function(_this) {
+    Common.setStartLabel(_this.cm, '##### ')
+    _this.cm.focus();
   },
-  h6: function(cm) {
-    Common.setStartLabel(cm, '###### ')
-    cm.focus();
+  h6: function(_this) {
+    Common.setStartLabel(_this.cm, '###### ')
+    _this.cm.focus();
   },
-  ul: function(cm) {
-    Common.setStartLabel(cm, '- ')
-    cm.focus();
+  ul: function(_this) {
+    Common.setStartLabel(_this.cm, '- ')
+    _this.cm.focus();
   },
-  ol: function(cm) {
-    Common.setStartLabel(cm, '1. ')
-    cm.focus();
+  ol: function(_this) {
+    Common.setStartLabel(_this.cm, '1. ')
+    _this.cm.focus();
   },
-  hr: function(cm) {
-    Common.insertLabel(cm, '\n\n------\n\n')
-    cm.focus();
+  hr: function(_this) {
+    Common.insertLabel(_this.cm, '\n\n------\n\n')
+    _this.cm.focus();
   },
-  link: function(cm, _this) {
+  link: function(_this) {
     _this.currentDialog = 'linkDialog'
     _this.showDialog = true;
   },
-  image: function(cm, _this) {
+  image: function(_this) {
     _this.currentDialog = 'imageDialog';
     _this.showDialog = true;
   },
-  table: function(cm, _this) {
+  table: function(_this) {
     _this.currentDialog = 'tableDialog'
     _this.showDialog = true;
   },
-  inlineCode: function(cm) {
-    Common.setWrapLabel(cm, '\`');
-    cm.focus();
+  inlineCode: function(_this) {
+    Common.setWrapLabel(_this.cm, '\`');
+    _this.cm.focus();
   },
-  blockCode: function(cm) {
+  blockCode: function(_this) {
     let defaultLang = 'javascript'
-    if (cm.somethingSelected()) {
-      let pos = cm.getCursor('from');
-      Common.setWrapLabel(cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`');
-      cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
+    if (_this.cm.somethingSelected()) {
+      let pos = _this.cm.getCursor('from');
+      Common.setWrapLabel(_this.cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`');
+      _this.cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
     } else {
-      let pos = cm.getCursor('start');
-      let lineContent = cm.getLine(pos.line);
+      let pos = _this.cm.getCursor('start');
+      let lineContent = _this.cm.getLine(pos.line);
       if (lineContent.trim()) { // 如果当前行有内容
-        cm.setCursor({ line: pos.line + 1, ch: 0 }); // 鼠标设置到下一行头
-        Common.setWrapLabel(cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`\n'); //插入标签
-        cm.setSelection({ line: pos.line + 1, ch: 3 }, { line: pos.line + 1, ch: 3 + defaultLang.length })
+        _this.cm.setCursor({ line: pos.line + 1, ch: 0 }); // 鼠标设置到下一行头
+        Common.setWrapLabel(_this.cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`\n'); //插入标签
+        _this.cm.setSelection({ line: pos.line + 1, ch: 3 }, { line: pos.line + 1, ch: 3 + defaultLang.length })
       } else { //当前行无内容
-        Common.setWrapLabel(cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`\n');
-        cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
+        Common.setWrapLabel(_this.cm, '\`\`\`' + defaultLang + '\n', '\n\`\`\`\n');
+        _this.cm.setSelection({ line: pos.line, ch: 3 }, { line: pos.line, ch: 3 + defaultLang.length })
       }
     }
-    cm.focus();
+    _this.cm.focus();
   },
-  previewMode: function(cm, _this) {
+  previewMode: function(_this) {
     _this.readShow = true;
     _this.readWidth = 50;
     _this.editShow = true;
     _this.editWidth = 50;
   },
-  editMode: function(cm, _this) {
+  editMode: function(_this) {
     _this.editShow = true;
     _this.readShow = false;
     _this.editWidth = 100;
   },
-  readMode: function(cm, _this) {
+  readMode: function(_this) {
     _this.readShow = true;
     _this.editShow = false;
     _this.readWidth = 100;
   },
-  exchange: function(cm, _this) {
+  exchange: function(_this) {
     _this.layoutDirection = !_this.layoutDirection;
-    cm.focus();
+    _this.cm.focus();
   },
-  settings: function(cm, _this) {
+  settings: function(_this) {
     _this.currentDialog = 'settingDialog';
     _this.showDialog = true;
   },
   // 不显示在工具栏的命令，仅支持快捷键
-  t: function(cm) { // Ctrl+T
-    let pos = cm.getCursor('from');
-    let currentContent = cm.getLine(pos.line);
+  t: function(_this) { // Ctrl+T
+    let pos = _this.cm.getCursor('from');
+    let currentContent = _this.cm.getLine(pos.line);
     if (/^[#]{6}/.test(currentContent)) {
       return
     }
 
     if (currentContent.trim()[0] == '#') {
-      Common.setStartLabel(cm, '#')
+      Common.setStartLabel(_this.cm, '#')
     } else {
-      Common.setStartLabel(cm, '# ')
+      Common.setStartLabel(_this.cm, '# ')
     }
-    cm.focus();
+    _this.cm.focus();
   },
-  linkWithoutDialog: function(cm) { // Ctrl+Shift+L
-    if (cm.somethingSelected()) {
-      let selection = cm.getSelection();
-      cm.replaceSelection('[' + selection + ']()')
+  linkWithoutDialog: function(_this) { // Ctrl+Shift+L
+    if (_this.cm.somethingSelected()) {
+      let selection = _this.cm.getSelection();
+      _this.cm.replaceSelection('[' + selection + ']()')
     } else {
-      Common.insertLabel(cm, '[]()');
+      Common.insertLabel(_this.cm, '[]()');
     }
-    let pos = cm.getCursor();
-    cm.setCursor({
+    let pos = _this.cm.getCursor();
+    _this.cm.setCursor({
       line: pos.line,
       ch: pos.ch - 3
     })
-    cm.focus();
+    _this.cm.focus();
   },
 
   // 向后添加行
-  addNewLineAppend: function(cm) { // Ctrl+Enter
-    let pos = cm.getCursor();
-    cm.setCursor({ line: pos.line + 1, ch: 0 });
-    cm.replaceSelection('\n', 'start');
-    cm.setCursor({ line: pos.line + 1, ch: 0 });
+  addNewLineAppend: function(_this) { // Ctrl+Enter
+    let pos = _this.cm.getCursor();
+    _this.cm.setCursor({ line: pos.line + 1, ch: 0 });
+    _this.cm.replaceSelection('\n', 'start');
+    _this.cm.setCursor({ line: pos.line + 1, ch: 0 });
   },
   // 向前添加行
-  addNewLinePrepend: function(cm) { // Ctrl+Shift+Enter
-    let pos = cm.getCursor();
-    cm.setCursor({ line: pos.line, ch: 0 });
-    cm.replaceSelection('\n', 'start');
+  addNewLinePrepend: function(_this) { // Ctrl+Shift+Enter
+    let pos = _this.cm.getCursor();
+    _this.cm.setCursor({ line: pos.line, ch: 0 });
+    _this.cm.replaceSelection('\n', 'start');
   }
 }
 
@@ -381,14 +381,14 @@ function savePost(_this, cb) {
         _this.webPost = post;
         _this.cm.markClean();
         _this.$message({
-          message: '文章保存成功！',
+          message: '文章保存到网络成功！',
           type: 'success',
           showClose: true
         });
         cb();
       }, function(err) {
         _this.$message({
-          message: '文章保存失败！',
+          message: '文章保存到网络失败！',
           type: 'error',
           showClose: true
         })
@@ -402,7 +402,8 @@ function savePost(_this, cb) {
     }
   } else {
     // 本地模式
-    saveLocalFile(_this)
+    saveLocalFile(_this);
+    cb();
   }
 
 }
@@ -433,7 +434,7 @@ function saveLocalFile(_this) {
     fs.writeFileSync(_this.currentFileInfo.filepath, fileContent, 'utf8');
     NProgress.done();
     _this.$message({
-      message: '文章保存成功！',
+      message: '文章保存到本地成功！',
       type: 'success',
       showClose: true
     });

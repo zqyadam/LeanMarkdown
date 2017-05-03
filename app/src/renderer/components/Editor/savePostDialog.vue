@@ -105,7 +105,7 @@ export default {
         postPromise.then(function(post) {
           _this.$parent.savingPost = false;
           _this.$message({
-            message: '文章保存成功！',
+            message: '文章保存到网络成功！',
             type: 'success',
             showClose: true
           });
@@ -114,7 +114,7 @@ export default {
           _this.$parent.showDialog = false;
         }, function(err) {
           _this.$message({
-            message: '文章保存失败！',
+            message: '文章保存到网络失败！',
             type: 'error',
             showClose: true
           })

@@ -9,22 +9,6 @@ export let APP_KEY = 'your_app_key';
 */
 
 
-
-// export let requestLogin = function(username, password) {
-//   if (!username || !password) {
-//     return null
-//   }
-//   return AV.User.logIn(username, password);
-// }
-
-// export let requestLogout = function() {
-//   AV.User.logOut();
-// }
-
-// export let isLoggedIn = function() {
-//   return AV.User.current() ? true : false;
-// }
-
 let Post = AV.Object.extend('Post');
 let Category = AV.Object.extend('Category');
 
@@ -33,8 +17,36 @@ export const initAV = function(settings) {
     appId: settings.appId,
     appKey: settings.appKey
   });
-  addCategory('未分类')
+  // addCategory('未分类');
 }
+
+export let requestLogin = function(username, password) {
+  console.log(username);
+  console.log(password);
+  if (!username || !password) {
+    return null
+  }
+  return AV.User.logIn(username, password);
+}
+
+export let requestLogout = function() {
+  AV.User.logOut();
+}
+
+export let isLoggedIn = function() {
+  return AV.User.current() ? true : false;
+}
+
+export let createNewUser = function(username, password) {
+  console.log('api: createNewUser');
+  var user = new AV.User();
+  // 设置用户名
+  user.setUsername(username);
+  // 设置密码
+  user.setPassword(password);
+  return user.signUp();
+}
+
 
 
 export let requestImageUploadFromLocal = function(fileObj) {
