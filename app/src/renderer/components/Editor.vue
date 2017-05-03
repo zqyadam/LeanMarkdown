@@ -24,6 +24,9 @@
             </el-dropdown-menu>
           </el-dropdown>
         </el-tooltip>
+       <!--  <el-tooltip effect="dark" content="退出当前用户" placement="bottom">
+          <el-button v-if="isLoggedIn" :plain="true" icon="el-icon-z-logout" size="small" @click="logout" class="dark"></el-button>
+        </el-tooltip> -->
       </el-button-group>
     </div>
     <!-- main -->

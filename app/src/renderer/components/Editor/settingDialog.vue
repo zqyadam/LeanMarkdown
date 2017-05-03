@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="showDialog" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" size="tiny" @open="open" @close="close">
     <span slot="title"><i class="el-icon-z-setting1"></i><span style="margin-left:5px;">基本设置</span></span>
-    <el-form :model="settings" label-width="80px" label-position="left" ref="settingForm" style="width:100%;">
+    <el-form :model="settings" label-width="100px" label-position="left" ref="settingForm" style="width:100%;">
       <el-form-item label="App ID" prop="appId" :rules="[{required:true, message:'App ID不能为空'}]">
         <el-input v-model="settings.appId" placeholder="请输入App ID" type="text">
         </el-input>
@@ -74,7 +74,7 @@ export default {
 
           requestLogin(_this.settings.username, _this.settings.password).then(function(user) {
             console.log(user);
-            
+            _this.$parent.$message.success('用户：'+_this.settings.username+'登录成功！');
 
             _this.$parent.currentFileInfo.localMode = false;
             _this.$parent.showDialog = false;
@@ -99,21 +99,30 @@ export default {
                 _this.$parent.$message.error('登录过于频繁，请在15分钟后重试！');
                 break;
               case 211:
-                _this.$parent.$message.error('找不到用户,将以本次邮箱和密码创建新用户，请稍后....');
-                // 创建新用户
-                console.log('creating new user');
-                createNewUser(_this.settings.username, _this.settings.password).then(function(user) {
-                  console.log(user);
 
-                },function(err) {
-                  console.log('register fail');
-                  console.log(err);
+                _this.$parent.$confirm('找不到用户,是否以本次输入的邮箱和密码创建新用户？', '创建新用户').then(function() {
+                  createNewUser(_this.settings.username, _this.settings.password).then(function(user) {
+                    console.log(user);
+                    _this.$parent.$notify({
+                      type: 'success',
+                      title: '新用户创建成功',
+                      message: '请牢记您的用户名和密码！\n用户名：' + _this.settings.username + '\n密码：' + _this.settings.password,
+                      offset:50
+                    })
+                  }, function(err) {
+                    console.log('register fail');
+                    console.log(err);
+                    _this.$parent.$message.error('新用户创建失败，请检查网络情况！');
+                  })
+                }).catch(function() {
+                  _this.$parent.$message.warning('取消新用户创建');
                 })
                 break;
               default:
                 _this.$parent.$message.error('不知名错误，(⊙﹏⊙)b')
             }
-
+            _this.$parent.currentFileInfo.localMode = false;
+             _this.$parent.showDialog = false;
           })
 
         })
