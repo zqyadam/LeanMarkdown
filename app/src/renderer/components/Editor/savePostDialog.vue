@@ -6,8 +6,8 @@
         <el-input v-model.trim="postTitle" :autofocus="true"></el-input>
       </el-form-item>
       <el-form-item label="选择文章分类">
-        <el-select v-model="postCategory" filterable placeholder="请选择文章分类" style="width:100%">
-          <el-option v-for="item in categories" :key="item.id" :label="item.get('category')" :value="item.id">
+        <el-select v-model="postCategory" filterable allow-create clearable  placeholder="请选择文章分类" style="width:100%">
+          <el-option v-for="item in categories" :label="item.get('label')" :value="item">
           </el-option>
         </el-select>
       </el-form-item>
@@ -27,7 +27,7 @@ export default {
   data() {
       return {
         postTitle: '',
-        postCategory: '',
+        postCategory: null,
         categories: [],
         activePanel: '1'
       }
@@ -66,7 +66,8 @@ export default {
       close: function() {
         console.log('closing save dialog');
         this.postTitle = '';
-        this.postCategory = '';
+        this.postCategory = null;
+        this.categories = [];
         if (this.$parent.afterSaveCallback) {
           this.$parent.afterSaveCallback();
         }
@@ -99,6 +100,7 @@ export default {
           })
           return
         }
+        // console.log(_this.postCategory instanceof Category );
         let postPromise = createNewPost(this.postTitle, this.$parent.cm.getValue(), this.postCategory);
         console.log(postPromise);
         _this.$parent.savingPost = true;

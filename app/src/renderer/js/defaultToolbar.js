@@ -352,7 +352,7 @@ export function askSave(_this, cb) {
 
 }
 
-
+// 保存文章，在新建网络文章时会显示"保存文章对话框"
 function savePost(_this, cb) {
   if (_this.savingPost) {
     _this.$message({
@@ -362,7 +362,7 @@ function savePost(_this, cb) {
     })
     return
   }
-  let postTitle = '未命名';
+  let postTitle = '未命名'; // 默认名称
   let postContent = _this.cm.getValue();
   if (_this.tocTree.length !== 0) {
     postTitle = _this.tocTree[0].text

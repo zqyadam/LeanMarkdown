@@ -76,9 +76,9 @@ export default {
           requestLogin(_this.settings.username, _this.settings.password).then(function(user) {
             console.log(user);
             _this.$parent.$message.success('用户：' + _this.settings.username + '登录成功！');
-
             _this.$parent.currentFileInfo.localMode = false;
             _this.$parent.showDialog = false;
+            addCategory('未分类');
           }, function(err) {
             // 登录失败，判断失败原因
             console.log('login failed');

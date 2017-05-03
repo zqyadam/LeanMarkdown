@@ -500,6 +500,8 @@ export default {
         if (!isLoggedIn()) {
           this.currentDialog = 'settingDialog';
           this.showDialog = true;
+        } else {
+          addCategory('未分类');
         }
       }
       // 更改标题
@@ -508,13 +510,6 @@ export default {
       } else { // 网络模式
         document.title = 'LeanMarkdown [网络模式]'
       }
-
-      // categoryExists('未分类').then(function(exist) {
-      //   console.log(exist);
-      //   if (!exist) {
-      //     addCategory('未分类')
-      //   }
-      // })
 
     }
 }

@@ -76,27 +76,41 @@ export let requestImageUploadFromStream = function(fileName, fileStream) {
 }
 
 
-export let createNewPost = function(title, content = '', categoryID = '') {
+export let createNewPost = function(title, content = '', category) {
+  // console.log(categoryID instanceof Category);
   // 查询分类
-  let category;
-  // 分类ID
-  category = new AV.Object.createWithoutData('Category', categoryID)
-    // 创建文章
-  let post = new Post();
 
-  // 设置文章属性
-  post.fetchWhenSave(true);
-  post.set('title', title);
-  post.set('category', category);
-  post.set('content', content);
-  // post.set('owner', AV.User.current())
-  // 添加acl权限
-  // let acl = new AV.ACL();
-  // acl.setPublicReadAccess(true);
-  // acl.setWriteAccess(AV.User.current(), true);
-  // post.setACL(acl);
-  console.log(post);
-  return post.save();
+  if (!(category instanceof Category)) {
+    return addCategory(category).then(function(category) {
+        console.log(category);
+      return addPost(category)
+    });
+    console.log(category);
+  } else {
+    return addPost(category);
+  }
+  // 分类ID
+
+  function addPost(category) {
+    let post = new Post();
+
+    // 设置文章属性
+    post.fetchWhenSave(true);
+    post.set('title', title);
+    post.set('category', category);
+    post.set('content', content);
+    post.set('owner', AV.User.current())
+      // 添加acl权限
+    let acl = new AV.ACL();
+    acl.setPublicReadAccess(true);
+    acl.setWriteAccess(AV.User.current(), true);
+    post.setACL(acl);
+    console.log(post);
+    return post.save();
+  }
+
+  // 创建文章
+
 }
 
 export let savePostWithoutData = function(postId, postTitle, postContent) {
@@ -104,6 +118,7 @@ export let savePostWithoutData = function(postId, postTitle, postContent) {
   post.fetchWhenSave(true);
   post.set('title', postTitle);
   post.set('content', postContent);
+
   return post.save();
 }
 
@@ -116,38 +131,47 @@ export let savePost = function(post, postTitle, postContent) {
 
 export let getAllPosts = function() {
   let query = new AV.Query('Post');
-  // query.equalTo('owner', AV.User.current());
+  query.equalTo('owner', AV.User.current());
   query.include(['category']);
   return query.find();
 }
 
 export let getCategories = function() {
   let query = new AV.Query('Category');
-  // query.equalTo('owner', AV.User.current());
+  query.equalTo('owner', AV.User.current());
   return query.find();
 }
 
-export let categoryExists = function(categoryName) {
-  let catQuery = new AV.Query('Category');
-  // catQuery.matches('category',/[未分类]/);
-  catQuery.matches('category', /[未分类]/);
-  return catQuery.find().then(function(result) {
-    console.log(result);
-    return result.length !== 0;
-  });
-}
+// export let categoryExists = function(categoryName) {
+//   let catQuery = new AV.Query('Category');
+//   catQuery.matches('label', /[未分类]/);
+//   return catQuery.find().then(function(result) {
+//     return result.length !== 0;
+//   });
+// }
 
 
 export let addCategory = function(categoryName) {
   let catQuery = new AV.Query('Category');
-  // catQuery.matches('category',/[未分类]/);
-  catQuery.matches('category', /[未分类]/);
+  let categoryNamePattern = new RegExp('['+categoryName+']');
+  console.log(categoryNamePattern);
+  catQuery.matches('label', categoryNamePattern);
+  catQuery.equalTo('owner', AV.User.current());
   return catQuery.find().then(function(result) {
-    console.log(result);
     if (result.length === 0) {
+      // category 不存在
       let cat = new Category();
-      cat.set('category', categoryName);
+      cat.set('label', categoryName);
+      cat.set('owner', AV.User.current())
+        // 添加acl权限
+      let acl = new AV.ACL();
+      acl.setPublicReadAccess(true);
+      acl.setWriteAccess(AV.User.current(), true);
+      cat.setACL(acl);
+      console.log('created a new Category');
       return cat.save();
+    }else{
+      return result[0];
     }
   });
 
