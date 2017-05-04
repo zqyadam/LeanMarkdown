@@ -1,11 +1,13 @@
 <template>
-  <el-dialog @close="close" v-model="showDialog" @open="open" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false">
+  <el-dialog @close="close" v-model="showDialog" @open="open" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" size="large">
     <span slot="title"><i class="el-icon-z-folder-open-o"></i><span style="margin-left:5px;">打开文件</span></span>
     <el-collapse accordion v-model="activePanel">
       <el-collapse-item title="打开网络文件" name="1">
-        <el-table style="width: 100%" :data="postArr" :border="true" height="300" empty-text="暂无文章" v-loading.body="loading" element-loading-text="拼命加载中">
+        <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无文章" v-loading.body="loading" element-loading-text="拼命加载中" height="442">
           <el-table-column property="attributes.title" label="文件名"></el-table-column>
           <el-table-column property="attributes.category.attributes.label" label="分类" width="150"></el-table-column>
+          <el-table-column label="最近更新" width="180" :formatter="renderupdatedAtRow">
+          </el-table-column>
           <el-table-column property="postOperate" label="操作" align="center" width="80">
             <template scope="scope">
               <el-button type="primary" size="small" @click="openWebPost(scope.row)">
@@ -14,6 +16,8 @@
             </template>
           </el-table-column>
         </el-table>
+        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="postArr.length">
+        </el-pagination>
       </el-collapse-item>
       <el-collapse-item title="打开本地文件" name="2">
         <el-upload class="avatar-uploader" action="" :show-file-list="false" :before-upload="openLocalFile">
@@ -29,17 +33,26 @@ import {
   getAllPosts
 } from '../../js/api'
 
+import moment from 'moment/moment.js'
+
 export default {
   data() {
       return {
         activePanel: '1',
         postArr: [],
-        loading: false
+        loading: false,
+        pageSize: 10,
+        currentPage: 1
       }
     },
     computed: {
       showDialog: function() {
         return this.show;
+      },
+      tableData: function() {;
+        let data = this.postArr.slice(this.pageSize * (this.currentPage - 1), this.pageSize * this.currentPage);
+        console.log(data);
+        return data;
       }
     },
     props: {
@@ -74,7 +87,7 @@ export default {
       },
       close: function() {
         console.log('closing showDialog');
-        this.postArr = null;
+        this.postArr = [];
         this.$parent.showDialog = false;
       },
       openWebPost: function(row) {
@@ -99,6 +112,17 @@ export default {
         this.$parent.showDialog = false;
         // 禁止上传
         return false;
+      },
+      renderupdatedAtRow: function(post) {
+        return moment(post.updatedAt).format("YYYY-MM-DD  H:mm:ss");
+      },
+      handleSizeChange: function(val) {
+        console.log(`每页 ${val} 条`);
+        this.pageSize = val;
+      },
+      handleCurrentChange(val) {
+        this.currentPage = val;
+        console.log(`当前页: ${val}`);
       }
     }
 }

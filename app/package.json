@@ -8,6 +8,7 @@
     "element-ui": "^1.2.9",
     "github-markdown-css": "^2.4.1",
     "marked": "^0.3.6",
+    "moment": "^2.18.1",
     "nprogress": "^0.2.0",
     "prismjs": "^1.6.0",
     "vue": "2.2.6",
