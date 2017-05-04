@@ -3,19 +3,19 @@
     <span slot="title"><i class="el-icon-z-setting1"></i><span style="margin-left:5px;">基本设置</span></span>
     <el-form :model="settings" label-width="100px" label-position="left" ref="settingForm" style="width:100%;">
       <el-form-item label="App ID" prop="appId" :rules="[{required:true, message:'App ID不能为空'}]">
-        <el-input v-model="settings.appId" placeholder="请输入App ID" type="text">
+        <el-input v-model.trim="settings.appId" placeholder="请输入App ID" type="text">
         </el-input>
       </el-form-item>
       <el-form-item label="App Key" prop="appKey" :rules="[{required:true, message:'App Key不能为空'}]">
-        <el-input v-model="settings.appKey" placeholder="请输入App Key" type="text">
+        <el-input v-model.trim="settings.appKey" placeholder="请输入App Key" type="text">
         </el-input>
       </el-form-item>
       <el-form-item label="登录邮箱" prop="username" :rules="[{ required: true, message: '请输入邮箱地址', trigger: 'blur' }, { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur,change' }]">
-        <el-input v-model="settings.username" placeholder="请输入App ID" type="text">
+        <el-input v-model.trim="settings.username" placeholder="请输入App ID" type="text">
         </el-input>
       </el-form-item>
       <el-form-item label="登录密码" prop="password" :rules="[{required:true, message:'密码不能为空'}, { min: 6,  message: '长度不小于6个字符', trigger: 'blur' }]">
-        <el-input v-model="settings.password" placeholder="请输入App Key" type="text">
+        <el-input v-model.trim="settings.password" placeholder="请输入App Key" type="text">
         </el-input>
       </el-form-item>
       <el-form-item>
@@ -36,11 +36,6 @@ import {
 
 export default {
   data() {
-
-      // let checkPassword =function(rule, value,callbcak) {
-      //   if (value.length <6 ) {return false}
-      // }
-
       return {
         settings: {
           appId: '', //
@@ -110,16 +105,19 @@ export default {
                 }).then(function() {
                   createNewUser(_this.settings.username, _this.settings.password).then(function(user) {
                     console.log(user);
+                    // 新建用户：成功
                     _this.$parent.$notify({
                         type: 'success',
                         title: '新用户创建成功',
                         message: '请牢记您的用户名和密码！\n用户名：' + _this.settings.username + '\n密码：' + _this.settings.password,
                         offset: 50
                       })
-                      // 切换
+                      // 切换到网络模式
                     _this.$parent.currentFileInfo.localMode = false;
                     _this.$parent.showDialog = false;
+
                   }, function(err) {
+                    // 新建用户： 失败
                     console.log('register fail');
                     console.log(err);
                     _this.$parent.$message.error('新用户创建失败，请检查网络情况！');
@@ -131,7 +129,7 @@ export default {
 
                 break;
               default:
-                _this.$parent.$message.error('不知名错误，(⊙﹏⊙)b')
+                _this.$parent.$message.error('不知名错误，(⊙﹏⊙)b');
             }
             // _this.$parent.currentFileInfo.localMode = false;
             //  _this.$parent.showDialog = false;
@@ -145,6 +143,7 @@ export default {
       },
       close: function() {
         console.log('closing setting dialog');
+        this.$parent.setTitle();
         this.$parent.showDialog = false;
       },
       open: function() {
@@ -153,7 +152,7 @@ export default {
           this.settings = JSON.parse(settings);
           let user = getCurrentUser();
           this.settings.username = (user ? user.getUsername() : '');
-          this.settings.password = '';
+          // this.settings.password = '';
         }
       }
     }

@@ -50,6 +50,7 @@
 <script>
 import {
   isLoggedIn,
+  getCurrentUser,
   requestImageUploadFromStream,
   requestImageUploadFromLocal,
   initAV,
@@ -263,6 +264,15 @@ export default {
           _this.cm.setOption('readOnly', false)
         })
       },
+      setTitle: function() {
+        if (this.currentFileInfo.localMode) { // 本地模式
+          document.title = 'LeanMarkdown [本地模式] ' + this.currentFileInfo.filepath
+        } else { // 网络模式
+          let user = getCurrentUser();
+          let username = user ? ' 当前用户：' + user.getUsername() : '';
+          document.title = 'LeanMarkdown [网络模式] ' + (this.webPost.id ? this.webPost.get('title') : '') + username;
+        }
+      },
       logout: function() {
         requestLogout();
         this.$router.push({
@@ -287,22 +297,11 @@ export default {
         this.HTMLContent = html;
       },
       'currentFileInfo.localMode': function(val) {
-        console.log('local mode changed');
-        console.log(val);
-        if (val) { // 本地模式
-          document.title = 'LeanMarkdown [本地模式] ' + this.currentFileInfo.filepath
-        } else { // 网络模式
-          document.title = 'LeanMarkdown [网络模式] ' + (this.webPost.id ? this.webPost.get('title') : '')
-        }
+        this.setTitle();
+      
       },
       'currentFileInfo.filepath': function(val) {
-        console.log('local filepath changed');
-        console.log(val);
-        if (this.currentFileInfo.localMode) { // 本地模式
-          document.title = 'LeanMarkdown [本地模式] ' + val
-        } else { // 网络模式
-          document.title = 'LeanMarkdown [网络模式] ' + (this.webPost.id ? this.webPost.get('title') : '')
-        }
+        this.setTitle();
       },
       'webPost': function(post) {
         if (!post.id) {
@@ -496,20 +495,24 @@ export default {
         // 网络模式
         this.settings = JSON.parse(settings);
         initAV(this.settings);
-        this.currentFileInfo.localMode = false;
         if (!isLoggedIn()) {
           this.currentDialog = 'settingDialog';
           this.showDialog = true;
         } else {
           addCategory('未分类');
         }
+        this.currentFileInfo.localMode = false;
       }
       // 更改标题
-      if (this.currentFileInfo.localMode) { // 本地模式
-        document.title = 'LeanMarkdown [本地模式]'
-      } else { // 网络模式
-        document.title = 'LeanMarkdown [网络模式]'
-      }
+      this.setTitle();
+      // if (this.currentFileInfo.localMode) { // 本地模式
+      //   document.title = 'LeanMarkdown [本地模式]'
+      // } else { // 网络模式
+      //   let user = getCurrentUser();
+      //   let username = user ? '用户：' + user.getUsername() : '';
+      //   document.title = 'LeanMarkdown [网络模式] ' + username;
+      //   // document.title = 'LeanMarkdown [网络模式]'
+      // }
 
     }
 }

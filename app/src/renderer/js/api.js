@@ -67,7 +67,7 @@ export let requestImageUploadFromLocal = function(fileObj) {
 export let requestImageUploadFromStream = function(fileName, fileStream) {
   console.log('uploading image from stream');
   let data = { base64: fileStream };
-  let file = new AV.File(fileName, data);
+  // let file = new AV.File(fileName, data);
   // let acl = new AV.ACL();
   // acl.setPublicReadAccess(true);
   // acl.setWriteAccess(AV.User.current(), true);
@@ -93,8 +93,8 @@ export let createNewPost = function(title, content = '', category) {
     console.log(category);
     return addPost(category);
   }
-  // 分类ID
 
+  // 创建文章
   function addPost(category) {
     let post = new Post();
 
@@ -112,7 +112,7 @@ export let createNewPost = function(title, content = '', category) {
     return post.save(null, { fetchWhenSave: true });
   }
 
-  // 创建文章
+
 
 }
 
@@ -155,11 +155,9 @@ export let getCategories = function() {
 export let addCategory = function(categoryName) {
   let catQuery = new AV.Query('Category');
   let categoryNamePattern = new RegExp('^' + categoryName + '$');
-  console.log(categoryNamePattern);
   catQuery.matches('label', categoryNamePattern);
   catQuery.equalTo('owner', AV.User.current());
   return catQuery.find().then(function(result) {
-    console.log(result);
     if (result.length === 0) {
       // category 不存在
       let cat = new Category();

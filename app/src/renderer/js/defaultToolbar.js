@@ -82,6 +82,7 @@ export const toolbarHandlers = {
       _this.cm.focus();
       _this.webPost = {};
       _this.currentFileInfo.filepath = '';
+      _this.setTitle();
     })
   },
   openFile: function(_this) {
