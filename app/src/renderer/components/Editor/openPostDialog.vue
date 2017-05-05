@@ -89,13 +89,15 @@ export default {
         console.log('closing showDialog');
         this.postArr = [];
         this.$parent.showDialog = false;
+        this.$parent.setTitle();
       },
       openWebPost: function(row) {
         console.log('打开网络文件:');
         this.$parent.webPost = row;
+        this.$parent.cm.clearHistory();
         this.$parent.cm.setValue(row.attributes.content)
         this.$parent.cm.markClean();
-        // localStorage.setItem('currentPostID', row.id);
+
         this.$message({
           message: '打开文章成功！',
           type: 'success',
@@ -117,12 +119,10 @@ export default {
         return moment(post.updatedAt).format("YYYY-MM-DD  H:mm:ss");
       },
       handleSizeChange: function(val) {
-        console.log(`每页 ${val} 条`);
         this.pageSize = val;
       },
       handleCurrentChange(val) {
         this.currentPage = val;
-        console.log(`当前页: ${val}`);
       }
     }
 }
