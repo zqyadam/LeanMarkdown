@@ -3,9 +3,9 @@
     <span slot="title"><i class="el-icon-z-folder-open-o"></i><span style="margin-left:5px;">打开文件</span></span>
     <el-collapse accordion v-model="activePanel">
       <el-collapse-item title="打开网络文件" name="1">
-        <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无文章" v-loading.body="loading" element-loading-text="拼命加载中" height="442">
+        <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无文章" v-loading.body="loading" element-loading-text="拼命加载中" height="442" @filter-change="filterCategory">
           <el-table-column property="attributes.title" label="文件名"></el-table-column>
-          <el-table-column property="attributes.category.attributes.label" label="分类" width="150"></el-table-column>
+          <el-table-column property="attributes.category.attributes.label" label="分类" width="150" :filters="categoryArr" column-key="category" :filter-multiple="false"></el-table-column>
           <el-table-column label="最近更新" width="180" :formatter="renderupdatedAtRow">
           </el-table-column>
           <el-table-column property="postOperate" label="操作" align="center" width="80">
@@ -16,7 +16,7 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="postArr.length">
+        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="filterdArr.length">
         </el-pagination>
       </el-collapse-item>
       <el-collapse-item title="打开本地文件" name="2">
@@ -40,9 +40,11 @@ export default {
       return {
         activePanel: '1',
         postArr: [],
+        categoryArr: [],
         loading: false,
         pageSize: 10,
-        currentPage: 1
+        currentPage: 1,
+        filterdArr: []
       }
     },
     computed: {
@@ -50,8 +52,7 @@ export default {
         return this.show;
       },
       tableData: function() {;
-        let data = this.postArr.slice(this.pageSize * (this.currentPage - 1), this.pageSize * this.currentPage);
-        console.log(data);
+        let data = this.filterdArr.slice(this.pageSize * (this.currentPage - 1), this.pageSize * this.currentPage);
         return data;
       }
     },
@@ -64,13 +65,26 @@ export default {
     methods: {
       open: function() {
         let _this = this;
-        // _this.loading = true;
-        console.log(_this.$parent.currentFileInfo);
+
         if (!_this.$parent.currentFileInfo.localMode) {
+          // 网络模式
           _this.activePanel = '1'
+          _this.loading = true;
           getAllPosts().then(function(posts) {
-            console.log(posts);
-            _this.postArr = posts;
+            _this.filterdArr = _this.postArr = posts;
+            // 获取分类数组
+            let categoryArr = [];
+            posts.forEach(function(post) {
+              if (!categoryArr.includes(post.get('category').get('label'))) {
+                categoryArr.push(post.get('category').get('label'))
+              }
+            })
+            _this.categoryArr = Array.from(categoryArr, function(item) {
+              return {
+                text: item,
+                value: item
+              }
+            })
             _this.loading = false;
           }, function(err) {
             this.$message({
@@ -82,6 +96,7 @@ export default {
             _this.loading = false;
           })
         } else {
+          // 本地模式
           _this.activePanel = '2'
         }
       },
@@ -123,6 +138,27 @@ export default {
       },
       handleCurrentChange(val) {
         this.currentPage = val;
+      },
+      filterCategory: function(filters) {
+        console.log('filterChange');
+        console.log(filters);
+        let _this = this;
+
+        let categoryArr;
+        if (filters['category'].length == 0) {
+          categoryArr = Array.from(this.categoryArr, function(item) {
+            return item.value
+          })
+        } else {
+          categoryArr = filters['category']
+        }
+        console.log(categoryArr);
+        this.filterdArr = [];
+        this.postArr.forEach(function(post) {
+          if (categoryArr.includes(post.get('category').get('label'))) {
+            _this.filterdArr.push(post);
+          }
+        })
       }
     }
 }

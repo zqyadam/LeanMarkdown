@@ -134,6 +134,7 @@ export let getAllPosts = function() {
   let query = new AV.Query('Post');
   query.equalTo('owner', AV.User.current());
   query.include(['category']);
+  query.descending('updatedAt');
   return query.find();
 }
 
