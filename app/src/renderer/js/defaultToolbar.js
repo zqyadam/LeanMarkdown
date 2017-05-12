@@ -235,6 +235,14 @@ export const toolbarHandlers = {
     _this.currentDialog = 'settingDialog';
     _this.showDialog = true;
   },
+  postsManage:function(_this) {
+    _this.currentDialog = 'postsManagementDialog';
+    _this.showDialog = true;
+  },
+  categoryManage:function(_this) {
+    _this.currentDialog = 'categoryManagementDialog';
+    _this.showDialog = true;
+  },
   // 不显示在工具栏的命令，仅支持快捷键
   t: function(_this) { // Ctrl+T
     let pos = _this.cm.getCursor('from');

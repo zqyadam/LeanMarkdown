@@ -1,15 +1,14 @@
 /* [class^="el-icon-z"], [class*=" el-icon-z"] */
 
-
 @font-face {font-family: "iconfont";
-  src: url('http://at.alicdn.com/t/font_puk07di8aqj2lnmi.eot?t=1493620427626'); /* IE9*/
-  src: url('http://at.alicdn.com/t/font_puk07di8aqj2lnmi.eot?t=1493620427626#iefix') format('embedded-opentype'), /* IE6-IE8 */
-  url('http://at.alicdn.com/t/font_puk07di8aqj2lnmi.woff?t=1493620427626') format('woff'), /* chrome, firefox */
-  url('http://at.alicdn.com/t/font_puk07di8aqj2lnmi.ttf?t=1493620427626') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
-  url('http://at.alicdn.com/t/font_puk07di8aqj2lnmi.svg?t=1493620427626#iconfont') format('svg'); /* iOS 4.1- */
+  src: url('http://at.alicdn.com/t/font_jh6w1ymz957y14i.eot?t=1494082605221'); /* IE9*/
+  src: url('http://at.alicdn.com/t/font_jh6w1ymz957y14i.eot?t=1494082605221#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('http://at.alicdn.com/t/font_jh6w1ymz957y14i.woff?t=1494082605221') format('woff'), /* chrome, firefox */
+  url('http://at.alicdn.com/t/font_jh6w1ymz957y14i.ttf?t=1494082605221') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
+  url('http://at.alicdn.com/t/font_jh6w1ymz957y14i.svg?t=1494082605221#iconfont') format('svg'); /* iOS 4.1- */
 }
 
- [class^="el-icon-z"], [class*=" el-icon-z"]  {
+[class^="el-icon-z"], [class*=" el-icon-z"] {
   font-family:"iconfont" !important;
   font-size:16px;
   font-style:normal;
@@ -107,6 +106,8 @@
 
 .el-icon-z-icon_font_large:before { content: "\e66a"; }
 
+.el-icon-z-posts:before { content: "\e617"; }
+
 .el-icon-z-redo:before { content: "\e716"; }
 
 .el-icon-z-undo:before { content: "\e733"; }
@@ -114,6 +115,8 @@
 .el-icon-z-HTML:before { content: "\e60f"; }
 
 .el-icon-z-youxuliebiao:before { content: "\e635"; }
+
+.el-icon-z-checked:before { content: "\e63f"; }
 
 .el-icon-z-h:before { content: "\e603"; }
 
@@ -154,3 +157,5 @@
 .el-icon-z-folder-open:before { content: "\e699"; }
 
 .el-icon-z-floppy-o:before { content: "\e69a"; }
+
+.el-icon-z-unchecked:before { content: "\e69d"; }

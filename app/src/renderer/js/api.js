@@ -129,6 +129,9 @@ export let savePost = function(post, postTitle, postContent) {
   post.set('content', postContent);
   return post.save(null, { fetchWhenSave: true });
 }
+export let savePosts = function(postArray) {
+  return AV.Object.saveAll(postArray);
+}
 
 export let getAllPosts = function() {
   let query = new AV.Query('Post');

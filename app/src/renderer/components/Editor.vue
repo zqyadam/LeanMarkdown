@@ -17,9 +17,9 @@
               管理<i class="el-icon-caret-bottom el-icon--right"></i>
             </el-button>
             <el-dropdown-menu slot="dropdown" class="dark">
-              <el-dropdown-item>文章管理</el-dropdown-item>
+              <el-dropdown-item command="postsManage">文章管理</el-dropdown-item>
               <el-dropdown-item>图片管理</el-dropdown-item>
-              <el-dropdown-item>分类管理</el-dropdown-item>
+              <el-dropdown-item command="categoryManage">分类管理</el-dropdown-item>
               <el-dropdown-item command="settings">基本设置</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
@@ -101,7 +101,8 @@ import tableDialog from './Editor/tableDialog'
 import openPostDialog from './Editor/openPostDialog'
 import savePostDialog from './Editor/savePostDialog'
 import settingDialog from './Editor/settingDialog'
-import categoryDialog from './Editor/categoryDialog'
+import postsManagementDialog from './Editor/postsManagementDialog'
+import categoryManagementDialog from './Editor/categoryManagementDialog'
 
 
 export default {
@@ -112,6 +113,8 @@ export default {
         tocTree: [],
         cm: {},
         rendering: false,
+        allPosts:[],
+        allCategories:[],
         webPost: {},
         currentFileInfo: {
           filepath: '',
@@ -149,7 +152,8 @@ export default {
       'openPostDialog': openPostDialog,
       'savePostDialog': savePostDialog,
       'settingDialog': settingDialog,
-      'categoryDialog': categoryDialog
+      'postsManagementDialog': postsManagementDialog,
+      'categoryManagementDialog': categoryManagementDialog
     },
     methods: {
       editor: function() {
@@ -298,7 +302,7 @@ export default {
       },
       'currentFileInfo.localMode': function(val) {
         this.setTitle();
-      
+
       },
       'currentFileInfo.filepath': function(val) {
         this.setTitle();
