@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="showDialog" size="full" @open="open" @close="close" :close-on-press-escape="false">
     <span slot="title"><i class="el-icon-z-posts"></i><span style="margin-left:5px;">文章管理</span></span>
-    <el-table :data="tableData" empty-text="暂无文章" v-loading="loading" element-loading-text="拼命加载中" border class="fit" @row-click="changeRow">
+    <el-table :data="tableData" empty-text="暂无文章" v-loading="loading" element-loading-text="拼命加载中" border class="fit" @row-click="changeRow" @filter-change="filterCategory">
       <el-table-column label="序号" width="80" align="center">
         <template scope="scope">
           <span>{{ pageSize*(currentPage-1)+scope.$index+1}}</span>
@@ -9,7 +9,7 @@
       </el-table-column>
       <el-table-column prop="attributes.title" label="文件名" width="300">
       </el-table-column>
-      <el-table-column prop="postCategory" label="所属分类" width="180" :filters="categoryArr" column-key="category" :filter-multiple="false">
+      <el-table-column prop="postCategory" label="所属分类" width="180" :filters="categoryArr" column-key="category" :filter-multiple="false" >
         <template scope="scope" v-if="scope.row.">
           <el-select :placeholder="scope.row.get('category').get('label')" style="width:100%" @change="changePostCategory" v-model="scope.row.attributes.category">
             <!--  -->
@@ -33,7 +33,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="postArr.length">
+    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="filterdArr.length">
     </el-pagination>
   </el-dialog>
 </template>
@@ -109,60 +109,6 @@ export default {
           _this.$parent.showDialog = false;
           _this.loading = false;
         })
-
-        // 获取所有分类
-        // getCategories().then(function(categories) {
-        //   _this.categoryArr = Array.from(categories, function(item) {
-        //     let label = item.get('label')
-        //     return {
-        //       text: label,
-        //       value: label
-        //     }
-        //   })
-        //   _this.$parent.allCategories = categories;
-        //   _this.loading = false;
-        // }, function(err) {
-        //   _this.$message({
-        //     message: '获取分类列表失败！',
-        //     type: 'error',
-        //     showClose: true
-        //   })
-        //   _this.loading = false
-        // });
-        // } else {
-        //   _this.loading = true;
-        //   _this.categoryArr = Array.from(_this.$parent.allCategories, function(item) {
-        //     let label = item.get('label')
-        //     return {
-        //       text: label,
-        //       value: label
-        //     }
-        //   })
-        //   _this.loading = false;
-        // }
-        // if (_this.$parent.allPosts.length == 0) {
-        // _this.loading = true;
-
-        //   getAllPosts().then(function(posts) {
-        //     console.log(posts);
-        //     _this.$parent.allPosts = posts;
-        //     _this.filterdArr = _this.$parent.allPosts;
-        //     _this.loading = false;
-        //   }, function(err) {
-        //     _this.$message({
-        //       message: '获取文件列表失败！',
-        //       type: 'error',
-        //       showClose: true
-        //     })
-        //     console.log(err);
-        //     _this.loading = false;
-        //   })
-        // } else {
-        //   _this.loading = true;
-        //   _this.filterdArr = _this.$parent.allPosts;
-        //   _this.loading = false;
-        // }
-
       },
       close: function() {
         let _this = this;
@@ -232,6 +178,27 @@ export default {
       },
       changeRow: function(row, event, column) {
         this.currentSelectedRow = row;
+      },
+      filterCategory:function(filters ) {
+      	console.log('filterChange');
+      	// console.log(row);
+      	let _this = this;
+      	let categoryArr;
+        if (filters['category'].length == 0) {
+          categoryArr = Array.from(this.categoryArr, function(item) {
+            return item.value
+          })
+        } else {
+          categoryArr = filters['category']
+        }
+        console.log(categoryArr);
+        this.filterdArr = [];
+        this.postArr.forEach(function(post) {
+          if (categoryArr.includes(post.get('category').get('label'))) {
+            _this.filterdArr.push(post);
+          }
+        })
+        this.currentPage = 1
       }
     }
 }
