@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="showDialog" size="full" @open="open" @close="close" :close-on-press-escape="false">
     <span slot="title"><i class="el-icon-z-posts"></i><span style="margin-left:5px;">文章管理</span></span>
-    <el-table :data="tableData" empty-text="暂无文章" v-loading="loading" element-loading-text="拼命加载中" border class="fit" @row-click="changeRow" @filter-change="filterCategory">
+    <el-table :data="tableData" empty-text="暂无文章" v-loading="loading" element-loading-text="拼命加载中" border class="fit" @row-click="changeRow" @filter-change="filterCategory" :row-class-name="hightlightCurrentPost">
       <el-table-column label="序号" width="80" align="center">
         <template scope="scope">
           <span>{{ pageSize*(currentPage-1)+scope.$index+1}}</span>
@@ -9,8 +9,8 @@
       </el-table-column>
       <el-table-column prop="attributes.title" label="文件名" width="300">
       </el-table-column>
-      <el-table-column prop="postCategory" label="所属分类" width="180" :filters="categoryArr" column-key="category" :filter-multiple="false" >
-        <template scope="scope" v-if="scope.row.">
+      <el-table-column prop="postCategory" label="所属分类" width="180" :filters="categoryArr" column-key="category" :filter-multiple="false">
+        <template scope="scope">
           <el-select :placeholder="scope.row.get('category').get('label')" style="width:100%" @change="changePostCategory" v-model="scope.row.attributes.category">
             <!--  -->
             <el-option v-for="item in categories" :key="item.id" :label="item.get('label')" :value="item">
@@ -26,9 +26,9 @@
       </el-table-column>
       <el-table-column label="操作" width="180">
         <template scope="scope">
-          <el-button size="small">编辑</el-button>
+          <el-button size="small" @click="editPost(scope.row)">编辑</el-button>
           <!-- @click="handleEdit(scope.$index, scope.row)" -->
-          <el-button size="small" type="danger">删除</el-button>
+          <el-button size="small" type="danger" @click="destroyPost(scope.row)">删除</el-button>
           <!-- @click="handleDelete(scope.$index, scope.row)" -->
         </template>
       </el-table-column>
@@ -43,6 +43,10 @@ import {
   getCategories,
   savePosts
 } from '../../js/api'
+
+import {
+  askSave
+} from '../../js/defaultToolbar'
 
 import moment from 'moment/moment.js'
 
@@ -144,6 +148,11 @@ export default {
         this.categoryArr = [];
         this.currentSelectedRow = {};
       },
+      hightlightCurrentPost: function(row, index) {
+        let currentPost = this.$parent.webPost;
+        console.log(currentPost.id == row.id);
+        return (currentPost.id === row.id) ? 'currentPost' : '';
+      },
       getCategoriesFromPosts: function(posts) {
         let categories = [];
         posts.forEach(function(post) {
@@ -179,11 +188,11 @@ export default {
       changeRow: function(row, event, column) {
         this.currentSelectedRow = row;
       },
-      filterCategory:function(filters ) {
-      	console.log('filterChange');
-      	// console.log(row);
-      	let _this = this;
-      	let categoryArr;
+      filterCategory: function(filters) {
+        console.log('filterChange');
+        // console.log(row);
+        let _this = this;
+        let categoryArr;
         if (filters['category'].length == 0) {
           categoryArr = Array.from(this.categoryArr, function(item) {
             return item.value
@@ -199,6 +208,31 @@ export default {
           }
         })
         this.currentPage = 1
+      },
+      editPost: function(post) {
+
+      	let currentPost = this.$parent.webPost;
+
+      	if (currentPost.id === post.id) {
+      		this.$parent.showDialog = false;
+      		return ;
+      	}
+        let _this = this.$parent;
+        askSave(_this, function() {
+          _this.webPost = post;
+          console.log('setting new post content');
+          _this.cm.clearHistory();
+          _this.cm.markClean();
+          console.log(post.get('content'));
+          _this.cm.setValue(post.get('content'))
+          _this.cm.focus();
+          _this.currentFileInfo.filepath = '';
+          _this.showDialog = false;
+        })
+      },
+      destroyPost: function(post) {
+        console.log();
+        console.log();
       }
     }
 }
@@ -207,5 +241,10 @@ export default {
 .fit {
   width: 100%;
   height: 100%;
+}
+</style>
+<style>
+.el-table .currentPost {
+  background: #D3DCE6;
 }
 </style>

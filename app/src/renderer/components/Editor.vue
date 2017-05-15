@@ -113,8 +113,8 @@ export default {
         tocTree: [],
         cm: {},
         rendering: false,
-        allPosts:[],
-        allCategories:[],
+        allPosts: [],
+        allCategories: [],
         webPost: {},
         currentFileInfo: {
           filepath: '',
@@ -311,6 +311,7 @@ export default {
         if (!post.id) {
           return
         }
+        
         document.title = 'LeanMarkdown [网络模式] ' + (post.id ? post.get('title') : '')
       },
       mode: function(val) {
