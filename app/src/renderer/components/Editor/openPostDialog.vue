@@ -3,7 +3,7 @@
     <span slot="title"><i class="el-icon-z-folder-open-o"></i><span style="margin-left:5px;">打开文件</span></span>
     <el-collapse accordion v-model="activePanel">
       <el-collapse-item title="打开网络文件" name="1">
-        <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无文章" v-loading.body="loading" element-loading-text="拼命加载中" height="442" @filter-change="filterCategory">
+        <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无文章" v-loading="loading" element-loading-text="拼命加载中" height="442" @filter-change="filterCategory">
           <el-table-column property="attributes.title" label="文件名"></el-table-column>
           <el-table-column property="attributes.category.attributes.label" label="分类" width="150" :filters="categoryArr" column-key="category" :filter-multiple="false"></el-table-column>
           <el-table-column label="最近更新" width="180" :formatter="renderupdatedAtRow">
@@ -71,6 +71,7 @@ export default {
           _this.activePanel = '1'
           _this.loading = true;
           getAllPosts().then(function(posts) {
+            console.log(posts);
             _this.filterdArr = _this.postArr = posts;
             // 获取分类数组
             let categoryArr = [];
@@ -95,6 +96,7 @@ export default {
             console.log(err);
             _this.loading = false;
           })
+          // _this.loading = false;
         } else {
           // 本地模式
           _this.activePanel = '2'

@@ -24,7 +24,7 @@
       </el-table-column>
       <el-table-column prop="attributes.content" label="文章内容" :show-overflow-tooltip="true">
       </el-table-column>
-      <el-table-column label="操作" width="180">
+      <el-table-column label="操作" width="140">
         <template scope="scope">
           <el-button size="small" @click="editPost(scope.row)">编辑</el-button>
           <!-- @click="handleEdit(scope.$index, scope.row)" -->
@@ -41,7 +41,8 @@
 import {
   getAllPosts,
   getCategories,
-  savePosts
+  savePosts,
+  destoryPost
 } from '../../js/api'
 
 import {
@@ -56,10 +57,11 @@ export default {
         loading: false,
         categories: [],
         filterdArr: [],
-        postArr: [],
+        postsMap: null,
         categoryArr: [],
         currentSelectedRow: {},
-        changedPosts: {},
+        changedPosts: new Set(),
+        filterConditionArr: [],
         // pagination
         pageSize: 10,
         currentPage: 1
@@ -91,12 +93,16 @@ export default {
         Promise.all([postsPromise, categoryPromise]).then(function(values) {
           console.log(values);
           // 所有文章
-          _this.postArr = values[0];
-          _this.filterdArr = _this.postArr;
+          _this.postsMap = new Map();
+          values[0].forEach(function(post) {
+            _this.postsMap.set(post.id, post)
+          })
+          _this.filterdArr = [..._this.postsMap.values()];
           // 所有分类
           _this.categories = values[1];
           _this.categoryArr = Array.from(values[1], function(item) {
-            let label = item.get('label')
+            let label = item.get('label');
+            _this.filterConditionArr.push(label)
             return {
               text: label,
               value: label
@@ -118,15 +124,17 @@ export default {
         let _this = this;
         this.loading = false;
         this.$parent.showDialog = false;
-        let posts = [];
-        for (let key in this.changedPosts) {
-          let post = this.changedPosts[key];
-          post.set('category', post.attributes.category)
-          posts.push(this.changedPosts[key])
-        }
-        console.log(posts);
-        if (posts.length > 0) {
-          savePosts(posts).then(function(savedPosts) {
+        if (this.changedPosts.size > 0) {
+       
+          let changedPosts = [];
+          this.changedPosts.forEach((post) => {
+          	console.log("postMap has post:"+this.postsMap.has(post.id));
+          	if (this.postsMap.has(post.id)) {
+          		changedPosts.push(post)
+          	}
+          })
+          console.log(changedPosts);
+          savePosts(changedPosts).then(function(savedPosts) {
             console.log(savedPosts);
             console.log('save posts success');
             _this.$message({
@@ -138,15 +146,29 @@ export default {
             console.log('save posts fail');
             _this.$message({
               message: '保存更改失败！',
-              type: 'success',
+              type: 'error',
               showClose: true
             })
           })
         }
-        this.changedPosts = {};
-        this.postArr = [];
+        this.changedPosts = new Set();
+        this.postsMap = null;
+        this.filterConditionArr = [];
         this.categoryArr = [];
         this.currentSelectedRow = {};
+        this.loading= false;       
+        this.filterdArr=[];
+        this.currentSelectedRow = null;
+        this.categories = [];     
+      },
+      refreshTable: function() {
+        this.filterdArr = [];
+        this.postsMap.forEach((post) => {
+          if (this.filterConditionArr.includes(post.get('category').get('label'))) {
+            this.filterdArr.push(post);
+          }
+        })
+        this.currentPage = 1
       },
       hightlightCurrentPost: function(row, index) {
         let currentPost = this.$parent.webPost;
@@ -182,17 +204,17 @@ export default {
           return
         }
         console.log('change post category');
-        let _this = this;
-        this.changedPosts[this.currentSelectedRow.id] = this.currentSelectedRow;
+        this.currentSelectedRow.set('category', this.currentSelectedRow.attributes.category);
+        this.changedPosts.add(this.currentSelectedRow);
       },
       changeRow: function(row, event, column) {
         this.currentSelectedRow = row;
       },
       filterCategory: function(filters) {
         console.log('filterChange');
-        // console.log(row);
         let _this = this;
         let categoryArr;
+        console.log(filters);
         if (filters['category'].length == 0) {
           categoryArr = Array.from(this.categoryArr, function(item) {
             return item.value
@@ -201,22 +223,15 @@ export default {
           categoryArr = filters['category']
         }
         console.log(categoryArr);
-        this.filterdArr = [];
-        this.postArr.forEach(function(post) {
-          if (categoryArr.includes(post.get('category').get('label'))) {
-            _this.filterdArr.push(post);
-          }
-        })
-        this.currentPage = 1
+        this.filterConditionArr = categoryArr;
+        this.refreshTable();
       },
       editPost: function(post) {
-
-      	let currentPost = this.$parent.webPost;
-
-      	if (currentPost.id === post.id) {
-      		this.$parent.showDialog = false;
-      		return ;
-      	}
+        let currentPost = this.$parent.webPost;
+        if (currentPost.id === post.id) {
+          this.$parent.showDialog = false;
+          return;
+        }
         let _this = this.$parent;
         askSave(_this, function() {
           _this.webPost = post;
@@ -231,8 +246,39 @@ export default {
         })
       },
       destroyPost: function(post) {
-        console.log();
-        console.log();
+        console.log(post);
+        let _this = this;
+        this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(function() {
+          let postId = post.id;
+          destoryPost(post).then(function(success) {
+            console.log(success);
+            _this.postsMap.delete(postId);
+
+            _this.$message({
+              message: '删除文章成功！',
+              type: 'success',
+              showClose: true
+            })
+            _this.refreshTable();
+          }, function(error) {
+            console.log(error);
+            _this.$message({
+              message: '删除文章失败！',
+              type: 'error',
+              showClose: true
+            })
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '取消删除'
+          });
+        })
+
       }
     }
 }

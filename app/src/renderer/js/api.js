@@ -111,9 +111,6 @@ export let createNewPost = function(title, content = '', category) {
     console.log(post);
     return post.save(null, { fetchWhenSave: true });
   }
-
-
-
 }
 
 export let savePostWithoutData = function(postId, postTitle, postContent) {
@@ -129,6 +126,11 @@ export let savePost = function(post, postTitle, postContent) {
   post.set('content', postContent);
   return post.save(null, { fetchWhenSave: true });
 }
+
+export let destoryPost = function(post) {
+  return post.destroy();
+}
+
 export let savePosts = function(postArray) {
   return AV.Object.saveAll(postArray);
 }
