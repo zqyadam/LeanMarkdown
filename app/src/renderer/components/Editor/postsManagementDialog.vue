@@ -124,16 +124,14 @@ export default {
         let _this = this;
         this.loading = false;
         this.$parent.showDialog = false;
-        if (this.changedPosts.size > 0) {
-       
-          let changedPosts = [];
-          this.changedPosts.forEach((post) => {
-          	console.log("postMap has post:"+this.postsMap.has(post.id));
-          	if (this.postsMap.has(post.id)) {
-          		changedPosts.push(post)
-          	}
-          })
-          console.log(changedPosts);
+        let changedPosts = [];
+        this.changedPosts.forEach((post) => {
+          if (this.postsMap.has(post.id)) {
+            changedPosts.push(post)
+          }
+        })
+        console.log(changedPosts);
+        if (changedPosts.length > 0) {
           savePosts(changedPosts).then(function(savedPosts) {
             console.log(savedPosts);
             console.log('save posts success');
@@ -156,19 +154,19 @@ export default {
         this.filterConditionArr = [];
         this.categoryArr = [];
         this.currentSelectedRow = {};
-        this.loading= false;       
-        this.filterdArr=[];
+        this.loading = false;
+        this.filterdArr = [];
         this.currentSelectedRow = null;
-        this.categories = [];     
+        this.categories = [];
       },
       refreshTable: function() {
         this.filterdArr = [];
         this.postsMap.forEach((post) => {
-          if (this.filterConditionArr.includes(post.get('category').get('label'))) {
-            this.filterdArr.push(post);
-          }
-        })
-        this.currentPage = 1
+            if (this.filterConditionArr.includes(post.get('category').get('label'))) {
+              this.filterdArr.push(post);
+            }
+          })
+          // this.currentPage = 1
       },
       hightlightCurrentPost: function(row, index) {
         let currentPost = this.$parent.webPost;
@@ -203,7 +201,7 @@ export default {
           console.log('refuse change cagetory');
           return
         }
-        console.log('change post category');
+        console.log('change post category ID：' + this.currentSelectedRow.id);
         this.currentSelectedRow.set('category', this.currentSelectedRow.attributes.category);
         this.changedPosts.add(this.currentSelectedRow);
       },
@@ -257,7 +255,6 @@ export default {
           destoryPost(post).then(function(success) {
             console.log(success);
             _this.postsMap.delete(postId);
-
             _this.$message({
               message: '删除文章成功！',
               type: 'success',
@@ -278,7 +275,6 @@ export default {
             message: '取消删除'
           });
         })
-
       }
     }
 }

@@ -85,7 +85,7 @@ export let createNewPost = function(title, content = '', category) {
     return addCategory(category).then(function(cat) {
       console.log(cat);
       return addPost(cat)
-    },function(err) {
+    }, function(err) {
       console.log('createNewPost: add category failed');
       console.log(err);
     });
@@ -135,6 +135,13 @@ export let savePosts = function(postArray) {
   return AV.Object.saveAll(postArray);
 }
 
+export let getCategoryPosts = function(category) {
+  let query = new AV.Query('Post');
+  query.equalTo('category', category);
+  query.equalTo('owner', AV.User.current());
+  return query.find();
+}
+
 export let getAllPosts = function() {
   let query = new AV.Query('Post');
   query.equalTo('owner', AV.User.current());
@@ -148,6 +155,15 @@ export let getCategories = function() {
   query.equalTo('owner', AV.User.current());
   return query.find();
 }
+
+
+export let saveCategory = function(category) {
+  return category.save();
+}
+
+export let destroyCategory = function(category) {
+  return category.destroy();
+} 
 
 // export let categoryExists = function(categoryName) {
 //   let catQuery = new AV.Query('Category');
