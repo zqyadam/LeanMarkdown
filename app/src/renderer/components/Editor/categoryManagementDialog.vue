@@ -32,7 +32,7 @@
       <span slot="title"><i class="el-icon-plus"></i><span style="margin-left:5px;">添加分类</span></span>
       <el-form label-width="100px">
         <el-form-item label="分类名称：">
-          <el-input v-model="newCategoryInfo.categoryName" placeholder="请输入分类名称" autofocus></el-input>
+          <el-input v-model.trim="newCategoryInfo.categoryName" placeholder="请输入分类名称" autofocus></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="addCategoryDialogConfirm">添加</el-button>
@@ -89,10 +89,11 @@ export default {
     methods: {
       open: function() {
         let _this = this;
-
+        this.loading = true;
         let categoryPromise = getCategories();
         // 获取所有分类
         getCategories().then((categories) => {
+          console.log('requesting categories success');
           let postsPromise = [];
           // 构建Promise数组
           categories.forEach((category) => {
@@ -100,10 +101,10 @@ export default {
             })
             // 发送Promise请求
           Promise.all(postsPromise).then((values) => {
+            console.log('requesting Posts success');
             _this.categoryMap = new Map();
             // 初始化categoryMap
             categories.forEach((category, index) => {
-              console.log(values[index]);
               category.attributes.posts = values[index];
               _this.categoryMap.set(category.id, category);
               // 设置默认分类
@@ -112,7 +113,16 @@ export default {
               }
             })
             _this.filterdArr = [..._this.categoryMap.values()]
+            _this.loading = false;
+          }).catch((err) => {
+            console.log('requesting Posts fail');
+            console.log(err);
+            _this.loading = false;
           })
+        }, (err) => {
+          console.log('requesting categories fail');
+          console.log(err);
+          _this.loading = false;
         })
       },
       close: function() {
@@ -201,12 +211,13 @@ export default {
       },
       // confirm
       addCategoryDialogConfirm: function() {
+        // 分类名称不能为空
         if (this.newCategoryInfo.categoryName === '') {
           return
         }
-        addCategory(this.newCategoryInfo.categoryName).then((newCategory) => {
-          console.log(newCategory);
-          if (this.categoryMap.has(newCategory.id)) {
+        // 检查分类名称是否已存在
+        for (let category of this.categoryMap.values()) {
+          if (this.newCategoryInfo.categoryName === category.get('label')) {
             this.$message({
               message: '分类已存在，请换个名称重试！',
               type: 'warning',
@@ -215,6 +226,10 @@ export default {
             this.newCategoryInfo.categoryName = '';
             return;
           }
+        }
+        // 添加新的分类
+        addCategory(this.newCategoryInfo.categoryName).then((newCategory) => {
+          console.log(newCategory);
           newCategory.attributes.posts = [];
           this.categoryMap.set(newCategory.id, newCategory)
           this.refreshTable();
@@ -231,12 +246,12 @@ export default {
             type: 'error',
             showClose: true
           });
-           this.addCategoryDialogShow = false;
+          this.addCategoryDialogShow = false;
         })
       },
       // cancel
       addCategoryDialogCancel: function() {
-         this.addCategoryDialogShow = false;
+        this.addCategoryDialogShow = false;
       }
 
     }
