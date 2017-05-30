@@ -10,26 +10,28 @@
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="所属文章" property="attributes.metaData.referedPosts">
+      <!-- <el-table-column label="所属文章(首次添加所在文章)" width="300" >
       	<template scope="scope">
-      		<div>
-      			{{scope.row.attributes.metaData.referedPosts}}
-      		</div>
+      		<span v-text="scope.row.attributes.metaData.referedPost?scope.row.attributes.metaData.referedPost.title:''">
+      		</span>
       	</template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="添加日期" :formatter="rendercreatedAtRow" width="170">
       </el-table-column>
       <el-table-column label="操作" width="80">
         <template scope="scope">
-          <el-button size="small" @click="deleteImage(scope.row)">删除</el-button>
+          <el-button size="small" @click="destroyImage(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="filterdArr.length">
+    </el-pagination>
   </el-dialog>
 </template>
 <script>
 import {
-  getAllImages
+  getAllImages,
+  destroyImage
 } from '../../js/api'
 
 import moment from 'moment/moment.js'
@@ -39,6 +41,7 @@ export default {
       return {
         loading: false,
         filterdArr: [],
+        imagesMap:null,
         // pagination
         pageSize: 10,
         currentPage: 1,
@@ -51,7 +54,8 @@ export default {
       tableData: function() {
         let data = this.filterdArr.slice(this.pageSize * (this.currentPage - 1), this.pageSize * this.currentPage);
         return data;
-      }
+      },
+
     },
     props: {
       show: {
@@ -64,16 +68,64 @@ export default {
         let imagePromise = getAllImages();
         // console.log(imagePromise);
         imagePromise.then((images) => {
-          console.log(images);
-          this.filterdArr = images;
+          // console.log(images);
+          this.imagesMap = new Map();
+          images.forEach((image) =>{
+            this.imagesMap.set(image.id, image)
+          })
+          this.filterdArr = [...this.imagesMap.values()];
         })
       },
       close: function() {
-
+      	this.imagesMap = null;
+      	this.filterdArr = [];
+      	this.loading = false;
+      	this.$parent.showDialog = false;
       },
       rendercreatedAtRow: function(image) {
         return moment(image.createdAt).format("YYYY-MM-DD  H:mm:ss");
       },
+      handleSizeChange: function(val) {
+        // console.log(`每页 ${val} 条`);
+        this.pageSize = val;
+      },
+      handleCurrentChange(val) {
+        this.currentPage = val;
+        // console.log(`当前页: ${val}`);
+      },
+      destroyImage:function(image) {
+      	// console.log(image);
+        let _this = this;
+        this.$confirm('此操作将永久删除该图片, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(function() {
+          let imageId = image.id;
+          destroyImage(image).then(function(success) {
+            // console.log(success);
+            _this.imagesMap.delete(imageId);
+            _this.$message({
+              message: '删除图片成功！',
+              type: 'success',
+              showClose: true
+            })
+            _this.filterdArr = [..._this.imagesMap.values()];
+          }, function(error) {
+            // console.log(error);
+            _this.$message({
+              message: '删除图片失败！',
+              type: 'error',
+              showClose: true
+            })
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '取消删除'
+          });
+        })
+      }
     }
 }
 </script>

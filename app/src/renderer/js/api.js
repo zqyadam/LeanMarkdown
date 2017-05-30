@@ -244,3 +244,8 @@ export let requestImageUploadFromStream = function(filename, fileStream, postObj
   file.setACL(acl)
   return file
 }
+
+
+export let destroyImage = function(image) {
+  return image.destroy();
+}

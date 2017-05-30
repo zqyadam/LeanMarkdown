@@ -91,7 +91,7 @@ export default {
         let categoryPromise = getCategories();
         let postsPromise = getAllPosts();
         Promise.all([postsPromise, categoryPromise]).then(function(values) {
-          console.log(values);
+          // console.log(values);
           // 所有文章
           _this.postsMap = new Map();
           values[0].forEach(function(post) {
@@ -110,7 +110,7 @@ export default {
           })
           _this.loading = false;
         }, function(reasons) {
-          console.log(reasons);
+          // console.log(reasons);
           _this.$message({
             message: '获取文章或分类列表失败！',
             type: 'error',
@@ -130,18 +130,18 @@ export default {
             changedPosts.push(post)
           }
         })
-        console.log(changedPosts);
+        // console.log(changedPosts);
         if (changedPosts.length > 0) {
           savePosts(changedPosts).then(function(savedPosts) {
-            console.log(savedPosts);
-            console.log('save posts success');
+            // console.log(savedPosts);
+            // console.log('save posts success');
             _this.$message({
               message: '保存更改成功！',
               type: 'success',
               showClose: true
             })
           }, function(err) {
-            console.log('save posts fail');
+            // console.log('save posts fail');
             _this.$message({
               message: '保存更改失败！',
               type: 'error',
@@ -170,7 +170,7 @@ export default {
       },
       hightlightCurrentPost: function(row, index) {
         let currentPost = this.$parent.webPost;
-        console.log(currentPost.id == row.id);
+        // console.log(currentPost.id == row.id);
         return (currentPost.id === row.id) ? 'currentPost' : '';
       },
       getCategoriesFromPosts: function(posts) {
@@ -189,19 +189,19 @@ export default {
         return moment(post.updatedAt).format("YYYY-MM-DD  H:mm:ss");
       },
       handleSizeChange: function(val) {
-        console.log(`每页 ${val} 条`);
+        // console.log(`每页 ${val} 条`);
         this.pageSize = val;
       },
       handleCurrentChange(val) {
         this.currentPage = val;
-        console.log(`当前页: ${val}`);
+        // console.log(`当前页: ${val}`);
       },
       changePostCategory: function(value) {
         if (this.loading || !this.currentSelectedRow.id) {
-          console.log('refuse change cagetory');
+          // console.log('refuse change cagetory');
           return
         }
-        console.log('change post category ID：' + this.currentSelectedRow.id);
+        // console.log('change post category ID：' + this.currentSelectedRow.id);
         this.currentSelectedRow.set('category', this.currentSelectedRow.attributes.category);
         this.changedPosts.add(this.currentSelectedRow);
       },
@@ -209,10 +209,10 @@ export default {
         this.currentSelectedRow = row;
       },
       filterCategory: function(filters) {
-        console.log('filterChange');
+        // console.log('filterChange');
         let _this = this;
         let categoryArr;
-        console.log(filters);
+        // console.log(filters);
         if (filters['category'].length == 0) {
           categoryArr = Array.from(this.categoryArr, function(item) {
             return item.value
@@ -220,7 +220,7 @@ export default {
         } else {
           categoryArr = filters['category']
         }
-        console.log(categoryArr);
+        // console.log(categoryArr);
         this.filterConditionArr = categoryArr;
         this.refreshTable();
       },
@@ -233,10 +233,10 @@ export default {
         let _this = this.$parent;
         askSave(_this, function() {
           _this.webPost = post;
-          console.log('setting new post content');
+          // console.log('setting new post content');
           _this.cm.clearHistory();
           _this.cm.markClean();
-          console.log(post.get('content'));
+          // console.log(post.get('content'));
           _this.cm.setValue(post.get('content'))
           _this.cm.focus();
           _this.currentFileInfo.filepath = '';
@@ -244,7 +244,7 @@ export default {
         })
       },
       destroyPost: function(post) {
-        console.log(post);
+        // console.log(post);
         let _this = this;
         this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
           confirmButtonText: '确定',
@@ -253,7 +253,7 @@ export default {
         }).then(function() {
           let postId = post.id;
           destoryPost(post).then(function(success) {
-            console.log(success);
+            // console.log(success);
             _this.postsMap.delete(postId);
             _this.$message({
               message: '删除文章成功！',
@@ -262,7 +262,7 @@ export default {
             })
             _this.refreshTable();
           }, function(error) {
-            console.log(error);
+            // console.log(error);
             _this.$message({
               message: '删除文章失败！',
               type: 'error',
