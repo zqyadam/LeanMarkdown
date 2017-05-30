@@ -31,7 +31,8 @@ import {
   initAV,
   requestLogin,
   createNewUser,
-  getCurrentUser
+  getCurrentUser,
+  addCategory
 } from '../../js/api'
 
 export default {
@@ -107,14 +108,15 @@ export default {
                     console.log(user);
                     // 新建用户：成功
                     _this.$parent.$notify({
-                        type: 'success',
-                        title: '新用户创建成功',
-                        message: '请牢记您的用户名和密码！\n用户名：' + _this.settings.username + '\n密码：' + _this.settings.password,
-                        offset: 50
-                      })
-                      // 切换到网络模式
+                      type: 'success',
+                      title: '新用户创建成功',
+                      message: '请牢记您的用户名和密码！\n用户名：' + _this.settings.username + '\n密码：' + _this.settings.password,
+                      offset: 50
+                    })
+                    // 切换到网络模式
                     _this.$parent.currentFileInfo.localMode = false;
                     _this.$parent.showDialog = false;
+                    addCategory('未分类');
 
                   }, function(err) {
                     // 新建用户： 失败

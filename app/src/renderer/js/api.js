@@ -158,6 +158,7 @@ export let addCategory = function(categoryName) {
   catQuery.matches('label', categoryNamePattern);
   catQuery.equalTo('owner', AV.User.current());
   return catQuery.find().then(function(result) {
+    console.log(result);
     if (result.length === 0) {
       // category 不存在
       let cat = new Category();
@@ -173,6 +174,18 @@ export let addCategory = function(categoryName) {
     } else {
       return result[0];
     }
+  },(err)=>{
+    // category 不存在
+      let cat = new Category();
+      cat.set('label', categoryName);
+      cat.set('owner', AV.User.current())
+        // 添加acl权限
+      let acl = new AV.ACL();
+      acl.setPublicReadAccess(true);
+      acl.setWriteAccess(AV.User.current(), true);
+      cat.setACL(acl);
+      console.log('created a new Category');
+      return cat.save();
   });
 
 }
