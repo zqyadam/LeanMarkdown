@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="showDialog" :close-on-press-escape="true" :modal="false" :close-on-click-modal="false" size="full" @open="open" @close="close">
     <span slot="title"><i class="el-icon-z-iconfontcolor16"></i><span style="margin-left:5px;">图片管理</span></span>
-    <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无分类数据" v-loading="loading" element-loading-text="拼命加载中" height="442">
+    <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无图片数据" v-loading="loading" element-loading-text="拼命加载中" height="442">
       <el-table-column label="图片URL" property="imageURL">
         <template scope="scope">
           <el-popover placement="top-start" trigger="hover">

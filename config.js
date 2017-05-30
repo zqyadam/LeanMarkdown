@@ -5,7 +5,7 @@ const path = require('path')
 let config = {
   // Name of electron app
   // Will be used in production builds
-  name: 'MarkdownEditor',
+  name: 'LeanMarkdown',
 
   // webpack-dev-server port
   port: 9080,

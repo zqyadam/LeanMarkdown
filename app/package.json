@@ -1,11 +1,11 @@
 {
-  "name": "Markdown",
+  "name": "LeanMarkdown",
   "version": "0.0.1",
   "description": "An electron-vue project",
   "main": "./dist/main.js",
   "dependencies": {
     "codemirror": "^5.24.2",
-    "element-ui": "^1.2.9",
+    "element-ui": "1.2.9",
     "github-markdown-css": "^2.4.1",
     "hasha": "^3.0.0",
     "marked": "^0.3.6",

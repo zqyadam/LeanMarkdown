@@ -357,6 +357,7 @@ export default {
             _this.openLocalFile(file)
           })
         } else if (/^image\//i.test(file.type)) {
+          e.preventDefault();
           // get file md5 
           let fileMd5 = hasha.fromFileSync(file.path, {
             algorithm: 'md5'

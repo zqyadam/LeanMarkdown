@@ -11,11 +11,11 @@
         </el-input>
       </el-form-item>
       <el-form-item label="登录邮箱" prop="username" :rules="[{ required: true, message: '请输入邮箱地址', trigger: 'blur' }, { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur,change' }]">
-        <el-input v-model.trim="settings.username" placeholder="请输入App ID" type="text">
+        <el-input v-model.trim="settings.username" placeholder="请输入登录邮箱" type="text">
         </el-input>
       </el-form-item>
       <el-form-item label="登录密码" prop="password" :rules="[{required:true, message:'密码不能为空'}, { min: 6,  message: '长度不小于6个字符', trigger: 'blur' }]">
-        <el-input v-model.trim="settings.password" placeholder="请输入App Key" type="text">
+        <el-input v-model.trim="settings.password" placeholder="请输入登录密码" type="text">
         </el-input>
       </el-form-item>
       <el-form-item>

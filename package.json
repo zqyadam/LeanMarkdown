@@ -1,6 +1,6 @@
 {
-  "name": "adamarkdown",
-  "version": "0.0.0",
+  "name": "LeanMarkdown",
+  "version": "0.0.1",
   "description": "An electron-vue project",
   "scripts": {
     "build": "node tasks/release.js",
