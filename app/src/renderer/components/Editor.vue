@@ -347,9 +347,10 @@ export default {
       // 拖拽打开文件或上传图片
       this.cm.on('drop', function(cm, e) {
         e.preventDefault();
-
         let file = e.dataTransfer.files[0];
-
+        if (file == undefined) {
+          return ;
+        }
         /* read text file */
         if (/\.(md|txt)$/i.test(file.name)) {
           // 询问是否保存当前文件

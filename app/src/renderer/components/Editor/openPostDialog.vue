@@ -5,7 +5,9 @@
       <el-collapse-item title="打开网络文件" name="1">
         <el-table style="width: 100%;" :data="tableData" :border="true" empty-text="暂无文章" v-loading="loading" element-loading-text="拼命加载中" height="442" @filter-change="filterCategory">
           <el-table-column property="attributes.title" label="文件名"></el-table-column>
-          <el-table-column property="attributes.category.attributes.label" label="分类" width="150" :filters="categoryArr" column-key="category" :filter-multiple="false"></el-table-column>
+          <el-table-column property="attributes.category.attributes.label" label="分类" width="200" :filters="categoryArr" column-key="category" :filter-multiple="false"></el-table-column>
+          <el-table-column prop="attributes.content" label="文章内容" :show-overflow-tooltip="true">
+          </el-table-column>
           <el-table-column label="最近更新" width="180" :formatter="renderupdatedAtRow">
           </el-table-column>
           <el-table-column property="postOperate" label="操作" align="center" width="80">
@@ -71,32 +73,32 @@ export default {
           _this.activePanel = '1'
           _this.loading = true;
           getAllPosts().then(function(posts) {
-            console.log(posts);
-            _this.filterdArr = _this.postArr = posts;
-            // 获取分类数组
-            let categoryArr = [];
-            posts.forEach(function(post) {
-              if (!categoryArr.includes(post.get('category').get('label'))) {
-                categoryArr.push(post.get('category').get('label'))
-              }
+              console.log(posts);
+              _this.filterdArr = _this.postArr = posts;
+              // 获取分类数组
+              let categoryArr = [];
+              posts.forEach(function(post) {
+                if (!categoryArr.includes(post.get('category').get('label'))) {
+                  categoryArr.push(post.get('category').get('label'))
+                }
+              })
+              _this.categoryArr = Array.from(categoryArr, function(item) {
+                return {
+                  text: item,
+                  value: item
+                }
+              })
+              _this.loading = false;
+            }, function(err) {
+              this.$message({
+                message: '获取文件列表失败！',
+                type: 'error',
+                showClose: true
+              })
+              console.log(err);
+              _this.loading = false;
             })
-            _this.categoryArr = Array.from(categoryArr, function(item) {
-              return {
-                text: item,
-                value: item
-              }
-            })
-            _this.loading = false;
-          }, function(err) {
-            this.$message({
-              message: '获取文件列表失败！',
-              type: 'error',
-              showClose: true
-            })
-            console.log(err);
-            _this.loading = false;
-          })
-          // _this.loading = false;
+            // _this.loading = false;
         } else {
           // 本地模式
           _this.activePanel = '2'

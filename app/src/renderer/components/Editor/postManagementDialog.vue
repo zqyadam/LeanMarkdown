@@ -12,7 +12,6 @@
       <el-table-column prop="postCategory" label="所属分类" width="180" :filters="categoryArr" column-key="category" :filter-multiple="false">
         <template scope="scope">
           <el-select :placeholder="scope.row.get('category').get('label')" style="width:100%" @change="changePostCategory" v-model="scope.row.attributes.category">
-            <!--  -->
             <el-option v-for="item in categories" :key="item.id" :label="item.get('label')" :value="item">
             </el-option>
           </el-select>
