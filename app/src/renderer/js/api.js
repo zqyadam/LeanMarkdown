@@ -22,11 +22,6 @@ export const initAV = function(settings) {
 }
 
 export let requestLogin = function(username, password) {
-  console.log(username);
-  console.log(password);
-  if (!username || !password) {
-    return null
-  }
   return AV.User.logIn(username, password);
 }
 

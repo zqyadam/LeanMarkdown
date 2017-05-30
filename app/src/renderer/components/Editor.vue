@@ -49,6 +49,7 @@
 </template>
 <script>
 import {
+  requestLogin,
   isLoggedIn,
   getCurrentUser,
   requestImageUploadFromStream,
@@ -528,24 +529,20 @@ export default {
         // 网络模式
         this.settings = JSON.parse(settings);
         initAV(this.settings);
-        if (!isLoggedIn()) {
+        console.log(this.settings);
+
+        requestLogin(settings.usernamem, settings.password).then(()=>{
+          // login success
+          addCategory('未分类');
+        },(error)=>{
+          // login fail
           this.currentDialog = 'settingDialog';
           this.showDialog = true;
-        } else {
-          addCategory('未分类');
-        }
+        })
         this.currentFileInfo.localMode = false;
       }
       // 更改标题
       this.setTitle();
-      // if (this.currentFileInfo.localMode) { // 本地模式
-      //   document.title = 'LeanMarkdown [本地模式]'
-      // } else { // 网络模式
-      //   let user = getCurrentUser();
-      //   let username = user ? '用户：' + user.getUsername() : '';
-      //   document.title = 'LeanMarkdown [网络模式] ' + username;
-      //   // document.title = 'LeanMarkdown [网络模式]'
-      // }
 
     }
 }

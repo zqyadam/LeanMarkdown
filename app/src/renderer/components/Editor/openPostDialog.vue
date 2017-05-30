@@ -73,32 +73,32 @@ export default {
           _this.activePanel = '1'
           _this.loading = true;
           getAllPosts().then(function(posts) {
-              console.log(posts);
-              _this.filterdArr = _this.postArr = posts;
-              // 获取分类数组
-              let categoryArr = [];
-              posts.forEach(function(post) {
-                if (!categoryArr.includes(post.get('category').get('label'))) {
-                  categoryArr.push(post.get('category').get('label'))
-                }
-              })
-              _this.categoryArr = Array.from(categoryArr, function(item) {
-                return {
-                  text: item,
-                  value: item
-                }
-              })
-              _this.loading = false;
-            }, function(err) {
-              this.$message({
-                message: '获取文件列表失败！',
-                type: 'error',
-                showClose: true
-              })
-              console.log(err);
-              _this.loading = false;
+            console.log(posts);
+            _this.filterdArr = _this.postArr = posts;
+            // 获取分类数组
+            let categoryArr = [];
+            posts.forEach(function(post) {
+              if (!categoryArr.includes(post.get('category').get('label'))) {
+                categoryArr.push(post.get('category').get('label'))
+              }
             })
-            // _this.loading = false;
+            _this.categoryArr = Array.from(categoryArr, function(item) {
+              return {
+                text: item,
+                value: item
+              }
+            })
+            _this.loading = false;
+          }, function(err) {
+            this.$message({
+              message: '获取文件列表失败！',
+              type: 'error',
+              showClose: true
+            })
+            console.log(err);
+            _this.loading = false;
+          })
+          _this.loading = false;
         } else {
           // 本地模式
           _this.activePanel = '2'
