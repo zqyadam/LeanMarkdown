@@ -1,4 +1,4 @@
-import { requestImageUploadFromLocal, createNewPost } from './api.js'
+// import { requestImageUploadFromLocal, createNewPost } from './api.js'
 import NProgress from 'nprogress/nprogress.js'
 
 
@@ -235,11 +235,15 @@ export const toolbarHandlers = {
     _this.currentDialog = 'settingDialog';
     _this.showDialog = true;
   },
-  postsManage:function(_this) {
-    _this.currentDialog = 'postsManagementDialog';
+  postManage: function(_this) {
+    _this.currentDialog = 'postManagementDialog';
     _this.showDialog = true;
   },
-  categoryManage:function(_this) {
+  imageManage: function(_this) {
+    _this.currentDialog = 'imageManagementDialog';
+    _this.showDialog = true;
+  },
+  categoryManage: function(_this) {
     _this.currentDialog = 'categoryManagementDialog';
     _this.showDialog = true;
   },
@@ -258,6 +262,11 @@ export const toolbarHandlers = {
     }
     _this.cm.focus();
   },
+  /**
+   * 插入链接（无对话框）
+   * @param  {Object} _this Editor实例
+   * @return {null}
+   */
   linkWithoutDialog: function(_this) { // Ctrl+Shift+L
     if (_this.cm.somethingSelected()) {
       let selection = _this.cm.getSelection();
@@ -285,6 +294,39 @@ export const toolbarHandlers = {
     let pos = _this.cm.getCursor();
     _this.cm.setCursor({ line: pos.line, ch: 0 });
     _this.cm.replaceSelection('\n', 'start');
+  },
+  /**
+   * 插入图片的"![]()"标签
+   * @param  {Object} _this Editor实例
+   * @param  {Array} args  url参数数组
+   */
+  insertImageLabel: function(_this, args) {
+    console.log(args);
+    let url = ''
+    if (args.length != 0) {
+      url = args[0];
+    }
+    if (_this.cm.somethingSelected()) {
+      let selection = _this.cm.getSelection();
+      let mdImage = '![' + selection + '](' + url + ')';
+      _this.cm.replaceSelection(mdImage);
+    } else {
+      let mdImage = '![](' + url + ')';
+      let pos = _this.cm.getCursor('from');
+      _this.cm.replaceRange(mdImage, pos);
+      _this.cm.setCursor({
+        line: pos.line,
+        ch: pos.ch + 2
+      });
+      _this.cm.replaceSelection('图片描述', 'around');
+    }
+    _this.uploadingImage = false;
+    _this.$message({
+      message: '图片上传成功！',
+      type: 'success'
+    })
+
+    _this.cm.setOption('readOnly', false)
   }
 }
 

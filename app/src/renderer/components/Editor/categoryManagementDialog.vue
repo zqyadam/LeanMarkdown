@@ -126,6 +126,12 @@ export default {
         })
       },
       close: function() {
+        this.loading = false;
+        this.categoryMap = null;
+        this.filterdArr = [];
+        this.defaultCategory = '';
+        this.addCategoryDialogShow = false;
+        this.newCategoryInfo.categoryName = '';
         this.$parent.showDialog = false;
       },
       refreshTable: function() {

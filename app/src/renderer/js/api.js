@@ -1,5 +1,6 @@
 // import AV from 'leancloud-storage'
 import { AV } from './av-min.js'
+import hasha from 'hasha'
 // import { APP_ID, APP_KEY } from './AVConfig.js'
 // in AVConfig.js
 /* template
@@ -53,29 +54,6 @@ export let createNewUser = function(username, password) {
 
 
 
-export let requestImageUploadFromLocal = function(fileObj) {
-  console.log('uploading image');
-  let file = new AV.File(fileObj.name, fileObj);
-  // let acl = new AV.ACL();
-  // acl.setPublicReadAccess(true);
-  // acl.setWriteAccess(AV.User.current(), true);
-  // file.setACL(acl)
-  return file;
-}
-
-
-export let requestImageUploadFromStream = function(fileName, fileStream) {
-  console.log('uploading image from stream');
-  let data = { base64: fileStream };
-  // let file = new AV.File(fileName, data);
-  // let acl = new AV.ACL();
-  // acl.setPublicReadAccess(true);
-  // acl.setWriteAccess(AV.User.current(), true);
-  // file.setACL(acl)
-  return file
-}
-
-
 export let createNewPost = function(title, content = '', category) {
   // console.log(categoryID instanceof Category);
   // 查询分类
@@ -109,7 +87,7 @@ export let createNewPost = function(title, content = '', category) {
     acl.setWriteAccess(AV.User.current(), true);
     post.setACL(acl);
     console.log(post);
-    return post.save(null, { fetchWhenSave: true });
+    return post.save();
   }
 }
 
@@ -118,13 +96,13 @@ export let savePostWithoutData = function(postId, postTitle, postContent) {
   post.set('title', postTitle);
   post.set('content', postContent);
 
-  return post.save(null, { fetchWhenSave: true });
+  return post.save();
 }
 
 export let savePost = function(post, postTitle, postContent) {
   post.set('title', postTitle);
   post.set('content', postContent);
-  return post.save(null, { fetchWhenSave: true });
+  return post.save();
 }
 
 export let destoryPost = function(post) {
@@ -163,7 +141,7 @@ export let saveCategory = function(category) {
 
 export let destroyCategory = function(category) {
   return category.destroy();
-} 
+}
 
 // export let categoryExists = function(categoryName) {
 //   let catQuery = new AV.Query('Category');
@@ -197,4 +175,72 @@ export let addCategory = function(categoryName) {
     }
   });
 
+}
+
+/**
+ * 图片相关
+ */
+
+export let getAllImages = function() {
+  let query = new AV.Query('_File');
+  query.matches('metaData.owner', AV.User.current().id)
+  return query.find();
+}
+
+/**
+ * 检测服务器端图片是否已存在
+ * @param  {String} md5Token md5标识
+ * @return {Promise}          [description]
+ */
+export let imageExists = function(md5Token) {
+  console.log(md5Token);
+  let query = new AV.Query('_File');
+  query.matches('metaData.owner', AV.User.current().id);
+  query.matches('metaData.md5', md5Token);
+  return query.find()
+}
+
+
+
+export let requestImageUploadFromLocal = function(fileObj, postObj = null) {
+  let fileMd5 = hasha.fromFileSync(fileObj.path, {
+    algorithm: 'md5'
+  });
+
+  console.log('uploading image');
+  console.log(fileMd5);
+  let file = new AV.File(fileObj.name, fileObj);
+  file.set('md5', fileMd5)
+  if (postObj !== null && postObj.id) {
+    file.set('referedPost', postObj);
+  } else {
+    file.set('referedPost', null);
+  }
+  let acl = new AV.ACL();
+  acl.setPublicReadAccess(true);
+  acl.setWriteAccess(AV.User.current(), true);
+  file.setACL(acl)
+  return file;
+}
+
+
+export let requestImageUploadFromStream = function(filename, fileStream, postObj = null) {
+  console.log('uploading image from stream');
+  let fileMd5 = hasha(fileStream, {
+    algorithm: 'md5'
+  });
+  console.log(fileMd5);
+  let data = { base64: fileStream };
+  let file = new AV.File(filename, data);
+  file.set('md5', fileMd5)
+  if (postObj !== null && postObj.id) {
+    file.set('referedPost', postObj);
+  } else {
+    file.set('referedPost', null);
+  }
+  let acl = new AV.ACL();
+  acl.setPublicReadAccess(true);
+  acl.setWriteAccess(AV.User.current(), true);
+  file.setACL(acl)
+  return file
 }

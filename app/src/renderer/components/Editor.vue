@@ -17,8 +17,8 @@
               管理<i class="el-icon-caret-bottom el-icon--right"></i>
             </el-button>
             <el-dropdown-menu slot="dropdown" class="dark">
-              <el-dropdown-item command="postsManage">文章管理</el-dropdown-item>
-              <el-dropdown-item>图片管理</el-dropdown-item>
+              <el-dropdown-item command="postManage">文章管理</el-dropdown-item>
+              <el-dropdown-item command="imageManage">图片管理</el-dropdown-item>
               <el-dropdown-item command="categoryManage">分类管理</el-dropdown-item>
               <el-dropdown-item command="settings">基本设置</el-dropdown-item>
             </el-dropdown-menu>
@@ -53,10 +53,13 @@ import {
   getCurrentUser,
   requestImageUploadFromStream,
   requestImageUploadFromLocal,
+  imageExists,
   initAV,
   addCategory,
   categoryExists
 } from '../js/api.js'
+
+import hasha from 'hasha'
 
 import {
   toolbar,
@@ -101,7 +104,8 @@ import tableDialog from './Editor/tableDialog'
 import openPostDialog from './Editor/openPostDialog'
 import savePostDialog from './Editor/savePostDialog'
 import settingDialog from './Editor/settingDialog'
-import postsManagementDialog from './Editor/postsManagementDialog'
+import postManagementDialog from './Editor/postManagementDialog'
+import imageManagementDialog from './Editor/imageManagementDialog'
 import categoryManagementDialog from './Editor/categoryManagementDialog'
 
 
@@ -152,7 +156,8 @@ export default {
       'openPostDialog': openPostDialog,
       'savePostDialog': savePostDialog,
       'settingDialog': settingDialog,
-      'postsManagementDialog': postsManagementDialog,
+      'postManagementDialog': postManagementDialog,
+      'imageManagementDialog': imageManagementDialog,
       'categoryManagementDialog': categoryManagementDialog
     },
     methods: {
@@ -172,9 +177,9 @@ export default {
         }
         return startLabel + html + endLabel;
       },
-      execuateCallback: function(name) {
+      execuateCallback: function(name, ...args) {
         if (this.toolbarHandlers[name]) {
-          this.toolbarHandlers[name](this)
+          this.toolbarHandlers[name](this, args)
         }
       },
       openLocalFile: function(file) {
@@ -234,30 +239,9 @@ export default {
             }
           }
         }).then(function(file) {
-
+          console.log(file);
           let url = file.url();
-
-          if (_this.cm.somethingSelected()) {
-            let selection = _this.cm.getSelection();
-            let mdImage = '![' + selection + '](' + url + ')';
-            _this.cm.replaceSelection(mdImage);
-          } else {
-            let mdImage = '![](' + url + ')';
-            let pos = _this.cm.getCursor('from');
-            _this.cm.replaceRange(mdImage, pos);
-            _this.cm.setCursor({
-              line: pos.line,
-              ch: pos.ch + 2
-            });
-            _this.cm.replaceSelection('图片描述', 'around');
-          }
-          _this.uploadingImage = false;
-          _this.$message({
-            message: '图片上传成功！',
-            type: 'success'
-          })
-
-          _this.cm.setOption('readOnly', false)
+          _this.execuateCallback('insertImageLabel', url);
         }, function(err) {
           _this.uploadingImage = false;
           console.log(err);
@@ -311,7 +295,7 @@ export default {
         if (!post.id) {
           return
         }
-        
+
         document.title = 'LeanMarkdown [网络模式] ' + (post.id ? post.get('title') : '')
       },
       mode: function(val) {
@@ -373,13 +357,31 @@ export default {
             _this.openLocalFile(file)
           })
         } else if (/^image\//i.test(file.type)) {
-          // read and upload image
-          _this.loading = true;
-          _this.loadingText = '准备开始上传...';
-          let filePromise = requestImageUploadFromLocal(file);
+          // get file md5 
+          let fileMd5 = hasha.fromFileSync(file.path, {
+            algorithm: 'md5'
+          });
+          console.log(fileMd5);
+          imageExists(fileMd5).then((results) => {
+            console.log(results.length);
+            if (results.length != 0) {
+              console.log('image exist');
+              // image exist
+              let url = results[0].get('url');
 
-          _this.uploadingImageFile(filePromise);
+              _this.execuateCallback('insertImageLabel', url);
+            } else {
+              // image not exist
+              // read and upload image
+              _this.loading = true;
+              _this.loadingText = '准备开始上传...';
+              let filePromise = requestImageUploadFromLocal(file, _this.webPost);
 
+              _this.uploadingImageFile(filePromise);
+            }
+          }, (err) => {
+            console.error('checking image exists error');
+          })
         }
       })
 
@@ -400,8 +402,33 @@ export default {
               let reader = new FileReader();
               reader.readAsDataURL(imgFile);
               reader.onload = function(e) {
-                let filePromise = requestImageUploadFromStream(fileName, this.result);
-                _this.uploadingImageFile(filePromise);
+                // get file md5 
+                let fileMd5 = hasha(this.result, {
+                  algorithm: 'md5'
+                });
+                console.log(fileMd5);
+                imageExists(fileMd5).then((results) => {
+                  console.log(results.length);
+                  if (results.length != 0) {
+                    console.log('image exist');
+                    // image exist
+                    let url = results[0].get('url');
+
+                    _this.execuateCallback('insertImageLabel', url);
+                  } else {
+                    // image not exist
+                    // read and upload image
+                    _this.loading = true;
+                    _this.loadingText = '准备开始上传...';
+
+                    let filePromise = requestImageUploadFromStream(fileName, this.result, _this.webPost);
+                    _this.uploadingImageFile(filePromise);
+
+                  }
+                }, (err) => {
+                  console.error('checking image exists error');
+                })
+
               }
 
               break;
