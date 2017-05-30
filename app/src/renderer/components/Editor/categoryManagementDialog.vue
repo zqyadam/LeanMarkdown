@@ -95,28 +95,36 @@ export default {
         getCategories().then((categories) => {
           console.log('requesting categories success');
           let postsPromise = [];
+          _this.categoryMap = new Map();
           // 构建Promise数组
           categories.forEach((category) => {
-              postsPromise.push(getCategoryPosts(category))
-            })
+            postsPromise.push(getCategoryPosts(category))
+            _this.categoryMap.set(category.id, category);
+            // 设置默认分类
+            if (category.get('label') === '未分类') {
+              _this.defaultCategory = category.id;
+            }
+          })
+          _this.filterdArr = [..._this.categoryMap.values()]
             // 发送Promise请求
           Promise.all(postsPromise).then((values) => {
             console.log('requesting Posts success');
-            _this.categoryMap = new Map();
             // 初始化categoryMap
             categories.forEach((category, index) => {
-              category.attributes.posts = values[index];
-              _this.categoryMap.set(category.id, category);
-              // 设置默认分类
-              if (category.get('label') === '未分类') {
-                _this.defaultCategory = category.id;
-              }
+              let currentCategory = _this.categoryMap.get(category.id);
+              currentCategory.attributes.posts = values[index];
+              _this.categoryMap.set(category.id, currentCategory)
             })
             _this.filterdArr = [..._this.categoryMap.values()]
             _this.loading = false;
           }).catch((err) => {
             console.log('requesting Posts fail');
             console.log(err);
+            this.$message({
+              message: '尚无文章！',
+              type: 'warning',
+              showClose: true
+            })
             _this.loading = false;
           })
         }, (err) => {
