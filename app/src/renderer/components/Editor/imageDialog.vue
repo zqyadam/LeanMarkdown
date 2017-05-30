@@ -1,22 +1,27 @@
 <template>
   <el-dialog :modal="false" v-model="showDialog" title="上传图片" :close-on-press-escape="true" :close-on-click-modal="false" @close="close">
-    <el-upload class="avatar-uploader" :before-upload="upload" action="" :show-file-list="false" select :accept="accepts">
+    <el-upload class="avatar-uploader"  action="" :show-file-list="false" select :accept="accepts"  ref="uploader" :http-request="upload">
+    <!-- :before-upload="upload" -->
       <i class="el-icon-plus avatar-uploader-icon"></i>
     </el-upload>
   </el-dialog>
 </template>
 <script>
 import {
-  requestImageUploadFromLocal
+  requestImageUploadFromLocal,
+  imageExists
 } from '../../js/api.js'
+
+import hasha from 'hasha'
+
 export default {
   data() {
       return {
-        accepts:  'image/*'
+        accepts: 'image/*'
       }
     },
-    computed:{
-      showDialog:function() {
+    computed: {
+      showDialog: function() {
         return this.show;
       }
     },
@@ -29,19 +34,41 @@ export default {
     methods: {
       close: function() {
         console.log('closing image dialog');
+        this.$parent.currentDialog = '';
         this.$parent.showDialog = false;
         this.$parent.cm.focus();
-        // this.$emit('close')
       },
-      upload: function(file) {
-        let filePromise = requestImageUploadFromLocal(file);
-        this.$parent.uploadingImageFile(filePromise)
-        // this.$emit('uploadingImageFile', filePromise);
-        // this.close();
-        this.$parent.showDialog = false;
-        return false;
+      upload: function(req) {
+        console.log(req);
+        // get file md5 
+        let file = req.file;        
+        let fileMd5 = hasha.fromFileSync(file.path, {
+          algorithm: 'md5'
+        });
+
+        imageExists(fileMd5).then((results) => {
+          console.log(results.length);
+          if (results.length != 0) {
+            console.log('image exist');
+            // image exist
+            let url = results[0].get('url');
+
+            this.$parent.execuateCallback('insertImageLabel', url);
+          } else {
+            // image not exist
+            // read and upload image
+            this.$parent.loading = true;
+            this.$parent.loadingText = '准备开始上传...';
+            let filePromise = requestImageUploadFromLocal(file);
+            this.$parent.uploadingImageFile(filePromise)
+          }
+        }, (err) => {
+          console.error('checking image exists error');
+        })
+        this.$parent.showDialog = false;   
       }
-    }
+    },
+
 }
 </script>
 <style scoped>
