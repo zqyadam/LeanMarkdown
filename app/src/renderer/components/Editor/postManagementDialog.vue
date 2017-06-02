@@ -109,14 +109,14 @@ export default {
           })
           _this.loading = false;
         }, function(reasons) {
-          // console.log(reasons);
+          console.log(reasons);
           _this.$message({
             message: '获取文章或分类列表失败！',
             type: 'error',
             showClose: true
           })
-          _this.$parent.showDialog = false;
           _this.loading = false;
+          _this.$parent.showDialog = false;
         })
       },
       close: function() {
